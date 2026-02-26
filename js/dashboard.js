@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 如果没有记录，显示占位图
         if (journalEntries.length === 0) {
             if (journalPlaceholder) journalPlaceholder.style.display = 'flex';
+            journalTimeline.classList.remove('has-entries'); // 移除样式类
             // 清除除了占位图之外的所有条目
             const entries = journalTimeline.querySelectorAll('.timeline-item');
             entries.forEach(e => e.remove());
@@ -73,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (journalPlaceholder) journalPlaceholder.style.display = 'none';
+        journalTimeline.classList.add('has-entries'); // 添加样式类
 
         // 全量渲染新条目
         const existingEntries = journalTimeline.querySelectorAll('.timeline-item');
