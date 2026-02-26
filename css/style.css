@@ -83,30 +83,58 @@ body {
     /* 使用原木色虚线作为分割，增加手账感 */
 }
 
-.logo {
+/* =========================================================
+   Sidebar (侧边栏) 样式
+========================================================= */
+
+.user-brand {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 48px;
+    margin-bottom: 40px;
+    padding: 12px;
+    background: #e2c9a7;
+    border: 3px solid #8b6f4c;
+    border-radius: 12px;
+    box-shadow: 0 4px 0 #5d3f2a;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.logo-icon {
-    font-size: 32px;
-    background: white;
-    width: 48px;
-    height: 48px;
-    border-radius: 16px;
+.user-brand:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #5d3f2a;
+}
+
+.brand-avatar {
+    font-size: 28px;
+    background: #f4e8d3;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 2px solid #b28b5c;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-soft);
 }
 
-.logo h1 {
-    font-size: 24px;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.5px;
+.brand-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-info h1 {
+    font-size: 16px;
+    font-weight: 900;
+    color: #2d3e1f;
+    margin: 0 0 2px 0;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.brand-sub {
+    font-size: 11px;
+    color: #5c4328;
+    font-weight: 700;
 }
 
 .nav-menu {
@@ -1900,4 +1928,511 @@ body {
 .btn-expand-measurements:hover {
     background: #C8E6C9;
     transform: translateY(-1px);
+}
+
+/* =========================================================
+   Dashboard (游戏化主页) 专区样式
+========================================================= */
+
+/* 2. 核心游戏化路线区 (星露谷生存体力条) */
+.survival-game-card {
+    background-color: #f2e1c0;
+    background-image: radial-gradient(circle at 10px 10px, #d9b382 1px, transparent 1px),
+        linear-gradient(45deg, #ecd8b4 20%, #f5e7ce 80%);
+    background-size: 20px 20px, 100%;
+    border: 4px solid #8b6f4c;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 8px 0 #5d3f2a, 0 16px 16px rgba(0, 0, 0, 0.1);
+    padding: 24px 20px 16px 20px;
+    margin-bottom: 32px;
+    position: relative;
+}
+
+/* 标题行 */
+.game-header-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e2c9a7;
+    border: 3px solid #b28b5c;
+    border-radius: 30px;
+    padding: 8px 16px;
+    margin-bottom: 24px;
+    box-shadow: inset 0 -3px 0 #9c7a4f, 0 4px 0 #7b5e3b;
+}
+
+.game-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.game-title-icon {
+    font-size: 20px;
+    filter: drop-shadow(2px 2px 0 #6b4e2e);
+}
+
+.game-title-text {
+    font-size: 13px;
+    font-weight: 800;
+    color: #2d3e1f;
+    text-shadow: 1px 1px 0 #c9a96b;
+}
+
+.game-kcal-counter {
+    background: #2c3a1f;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: #ffe484;
+    font-size: 13px;
+    font-weight: 800;
+    border: 2px solid #7faa60;
+    box-shadow: inset 0 -2px 0 #1e2a15;
+    font-family: monospace;
+}
+
+/* 装饰小草 */
+.grass-tuft {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.grass {
+    width: 12px;
+    height: 20px;
+    background: repeating-linear-gradient(45deg, #A3C9A8 0px, #A3C9A8 4px, #84A59D 4px, #84A59D 8px);
+    border-radius: 30% 30% 0 0;
+    transform: rotate(2deg);
+    box-shadow: 0 4px 0 #5c7a68;
+    position: relative;
+    top: 8px;
+}
+
+.grass:nth-child(even) {
+    transform: rotate(-3deg);
+    height: 24px;
+}
+
+/* 轨道区域 */
+.track-wrapper {
+    position: relative;
+    margin: 16px 0 24px;
+    background: #dbbc87;
+    border-radius: 40px;
+    padding: 8px 8px 12px 8px;
+    border: 4px solid #aa7e53;
+    box-shadow: inset 0 -4px 0 #836e48, 0 6px 0 #61482d;
+}
+
+.survival-track {
+    position: relative;
+    height: 44px;
+    background: #E8D5B5;
+    border-radius: 22px;
+    box-shadow: inset 0 0 0 2px #fcf2de, 0 4px 0 #7b5d3a;
+    border: 3px solid #7C5432;
+}
+
+/* 轨道刻度 */
+.track-marks {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10%;
+    align-items: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.track-marks div {
+    width: 4px;
+    height: 16px;
+    background: #A77B50;
+    border-radius: 2px;
+    margin-top: 14px;
+}
+
+/* 动态填充条 */
+.survival-fill {
+    position: absolute;
+    right: 0;
+    /* 从右侧开始减少 */
+    top: 2px;
+    bottom: 0;
+    height: 34px;
+    background: #6B8E23;
+    border-radius: 17px;
+    transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s;
+    z-index: 2;
+}
+
+.survival-fill.warning {
+    background: #FF8C00;
+    animation: pulseWarning 1s infinite alternate;
+}
+
+.survival-fill.depleted {
+    background: #696969;
+}
+
+.survival-fill.gameover {
+    background: #4A2C2C;
+}
+
+@keyframes pulseWarning {
+    from {
+        background: #FF8C00;
+    }
+
+    to {
+        background: #FF4500;
+    }
+}
+
+/* 小人化身 */
+.survival-avatar {
+    position: absolute;
+    top: -24px;
+    width: 40px;
+    height: 50px;
+    /* 右对齐，由 JS 通过 right 属性来控制距右边距百分比，加上负 margin 使其居中 */
+    margin-right: -20px;
+    transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+.sv-avatar-hat {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    width: 24px;
+    height: 14px;
+    z-index: 3;
+}
+
+.sv-avatar-hat .hat-top {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    width: 16px;
+    height: 8px;
+    background: #D2691E;
+}
+
+.sv-avatar-hat .hat-brim {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 24px;
+    height: 6px;
+    background: #8B4513;
+}
+
+.sv-avatar-head {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background: #F5DEB3;
+    z-index: 2;
+}
+
+.survival-avatar.depleted .sv-avatar-head,
+.survival-avatar.gameover .sv-avatar-head {
+    background: #AAAAAA;
+}
+
+.sv-eye {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #000;
+    border-radius: 50%;
+}
+
+.sv-eye.left {
+    top: 6px;
+    left: 4px;
+}
+
+.sv-eye.right {
+    top: 6px;
+    right: 4px;
+}
+
+.survival-avatar.depleted .sv-eye,
+.survival-avatar.gameover .sv-eye {
+    height: 2px;
+    border-radius: 0;
+}
+
+.sv-avatar-body {
+    position: absolute;
+    top: 30px;
+    left: 8px;
+    width: 24px;
+    height: 18px;
+    background: #3E721D;
+    z-index: 1;
+    border-radius: 4px 4px 0 0;
+}
+
+.survival-avatar.depleted .sv-avatar-body {
+    background: #7A7A7A;
+}
+
+.sv-pants {
+    position: absolute;
+    bottom: -6px;
+    left: 4px;
+    width: 16px;
+    height: 6px;
+    background: #CD853F;
+}
+
+.sv-sweat {
+    position: absolute;
+    top: 0;
+    right: -4px;
+    width: 4px;
+    height: 8px;
+    background: #FF6347;
+    border-radius: 2px;
+    animation: sweatDrop 0.5s infinite alternate;
+}
+
+@keyframes sweatDrop {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(4px);
+    }
+}
+
+/* 飘字 */
+.float-text-container {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.float-text {
+    position: absolute;
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 900;
+    white-space: nowrap;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5), 0 0 2px black;
+    color: white;
+    animation: float-up 1s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes float-up {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    70% {
+        opacity: 0.8;
+        transform: translateY(-25px) scale(1.1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.9);
+    }
+}
+
+/* 3. 数据仪表盘区 */
+.stats-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: #e2c9a7;
+    border: 3px solid #8b6f4c;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 5px 0 #5d3f2a;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.stat-card:hover {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 #5d3f2a;
+}
+
+.stat-card.full-width {
+    grid-column: span 2;
+}
+
+.stat-icon {
+    font-size: 32px;
+    width: 60px;
+    height: 60px;
+    background: #f4e8d3;
+    border-radius: 8px;
+    border: 2px solid #b28b5c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-title {
+    font-size: 13px;
+    color: #5c4328;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 900;
+    color: #2d3e1f;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.stat-value small {
+    font-size: 14px;
+    color: #5c4328;
+    font-weight: 700;
+}
+
+.highlight-deficit {
+    color: #b84343;
+    font-size: 28px;
+}
+
+.stat-sub {
+    font-size: 12px;
+    color: #6b4e2e;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.stat-quote {
+    font-size: 12px;
+    color: #3e721d;
+    font-weight: 800;
+    margin-top: 8px;
+}
+
+.stat-bar {
+    height: 8px;
+    background: #cfb28c;
+    border-radius: 4px;
+    margin-top: 8px;
+    border: 1px solid #aa8b66;
+    overflow: hidden;
+}
+
+.stat-fill {
+    height: 100%;
+    border-radius: 4px;
+}
+
+/* 4. 快捷动作触发区 (星露谷游戏厚实体按钮) */
+.quick-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.btn-action {
+    flex: 1;
+    background: #e2c9a7;
+    border: 3px solid #8b6f4c;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #5d3f2a;
+    transition: transform 0.1s, box-shadow 0.1s;
+    outline: none;
+}
+
+.btn-action:active {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #5d3f2a;
+}
+
+/* 专项颜色定制：记饮食（主要动作）-> 复古红 */
+#action-eat {
+    background: #d87070;
+}
+
+#action-eat .action-text {
+    color: #4a1c1c;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* 专项颜色定制：吃大餐 -> 复古橙黑 */
+#action-eat-big {
+    background: #dbbc87;
+}
+
+#action-eat-big .action-text {
+    color: #4a3320;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* 专项颜色定制：记运动 -> 复古绿 */
+#action-exercise {
+    background: #8FCE7F;
+}
+
+#action-exercise .action-text {
+    color: #1e3b1e;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* 专项颜色定制：重置次日 -> 蓝灰底色 */
+#action-reset {
+    background: #8ab6d6 !important;
+    /* Override inline style if any */
+}
+
+#action-reset .action-text {
+    color: #1e3b52;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.action-icon {
+    font-size: 28px;
+    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.15));
+}
+
+.action-text {
+    font-weight: 900;
+    color: #2d3a1a;
+    font-size: 14px;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
 }
