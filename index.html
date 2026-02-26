@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>减脂小村</title>
@@ -8,577 +9,500 @@
     <!-- 引入治愈系无衬线英文字体 Nunito -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/picker.js" defer></script>
     <script src="js/profile.js" defer></script>
-  </head>
+</head>
 
-  <body>
+<body>
     <div class="app-container">
-      <!-- 侧边栏及导航 -->
-      <aside class="sidebar">
-        <div class="user-brand" id="open-profile-btn">
-          <div class="brand-avatar">
-            <span class="emoji">🌿</span>
-          </div>
-          <div class="brand-info">
-            <h1>冒险者</h1>
-            <span class="brand-sub">减脂小村居民</span>
-          </div>
-        </div>
-
-        <nav class="nav-menu">
-          <button class="nav-item active" data-target="dashboard">
-            <span class="icon">🍄</span>
-            <span>我的旅程</span>
-          </button>
-          <button class="nav-item" data-target="journal">
-            <span class="icon">📔</span>
-            <span>饮食手账</span>
-          </button>
-        </nav>
-
-        <div class="user-profile">
-          <div class="avatar-placeholder"></div>
-          <div class="user-info">
-            <div class="user-name">冒险者</div>
-            <div class="user-streak">🔥 连续 5 天</div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- 主内容区 -->
-      <main class="main-content" id="app-content">
-        <!-- 视图会通过 JS 动态挂载到这里，当前直接把 dashboard 放这里作为初版 -->
-        <div class="view-container" id="view-dashboard">
-          <header class="view-header">
-            <h2>今日旅程</h2>
-            <div class="date-badge">10月24日，周四</div>
-          </header>
-
-          <!-- 2. 核心游戏化路线区 (星露谷生存体力条) -->
-          <section class="survival-game-card">
-            <div class="game-header-panel">
-              <div class="game-title-group">
-                <h3>今日体力</h3>
-                <span class="game-subtext">目标 1500 kcal</span>
-              </div>
-              <div class="game-score">
-                <span id="kcalDisplay">1500 / 1500</span> kcal
-              </div>
-            </div>
-
-            <!-- 装饰小草 -->
-            <div class="landscape-grass">
-              <span>🌱</span><span>🌿</span><span>🍄</span>
-            </div>
-
-            <!-- 轨道 + 进度条区域 -->
-            <div class="survival-track-wrapper">
-              <div class="survival-track">
-                <!-- 刻度 -->
-                <div class="track-markers">
-                  <span></span><span></span><span></span><span></span>
+        <!-- 侧边栏及导航 -->
+        <aside class="sidebar">
+            <div class="user-brand" id="open-profile-btn">
+                <div class="brand-avatar">
+                    <span class="emoji">🌿</span>
                 </div>
+                <div class="brand-info">
+                    <h1>冒险者</h1>
+                    <span class="brand-sub">减脂小村居民</span>
+                </div>
+            </div>
 
-                <!-- 动态填充条（宽度由 JS 控制） -->
-                <div class="survival-fill" id="survivalFill"></div>
-                <!-- 体力条上的小人化身（右侧对齐当前宽度） -->
-                <div class="survival-avatar" id="survivalAvatar">
-                  <!-- 用纯 CSS 拼接的小人，基于原型 -->
-                  <div class="sv-char">
-                    <div class="sv-head"></div>
-                    <div class="sv-body"></div>
-                    <div class="sv-legs"></div>
-                    <div class="sv-sweat" id="svSweat" style="display: none">
-                      💧
+            <nav class="nav-menu">
+                <button class="nav-item active" data-target="dashboard">
+                    <span class="icon">🍄</span>
+                    <span>我的旅程</span>
+                </button>
+                <button class="nav-item" data-target="journal">
+                    <span class="icon">📔</span>
+                    <span>饮食手账</span>
+                </button>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar-placeholder"></div>
+                <div class="user-info">
+                    <div class="user-name">冒险者</div>
+                    <div class="user-streak">🔥 连续 5 天</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content" id="app-content">
+            <!-- 视图会通过 JS 动态挂载到这里，当前直接把 dashboard 放这里作为初版 -->
+            <div class="view-container" id="view-dashboard">
+                <header class="view-header">
+                    <h2>今日旅程</h2>
+                    <div class="date-badge">10月24日，周四</div>
+                </header>
+
+                <!-- 2. 核心游戏化路线区 (星露谷生存体力条) -->
+                <section class="survival-game-card">
+                    <div class="game-header-panel">
+                        <div class="game-title-group">
+                            <h3>今日体力</h3>
+                            <span class="game-subtext">目标 1500 kcal</span>
+                        </div>
+                        <div class="game-score">
+                            <span id="kcalDisplay">1500 / 1500</span> kcal
+                        </div>
                     </div>
-                  </div>
-                </div>
-                <!-- 飘字动态插入到此容器内 -->
-                <div id="floatContainer" class="float-container"></div>
-              </div>
 
-              <!-- 4. 快捷动作触发区 (挪入进度条内) -->
-              <section class="quick-actions mini-actions">
-                <button class="btn-action bg-eat" id="action-eat-big">
-                  <span class="action-icon">🍔</span>
-                  <span class="action-text">大餐 (-500)</span>
-                </button>
-                <button class="btn-action bg-eat" id="action-eat">
-                  <span class="action-icon">🍎</span>
-                  <span class="action-text">进食 (-200)</span>
-                </button>
-                <button class="btn-action bg-exercise" id="action-exercise">
-                  <span class="action-icon">🏃</span>
-                  <span class="action-text">运动 (+180)</span>
-                </button>
-                <button
-                  class="btn-action btn-reset"
-                  id="action-reset"
-                  style="background-color: #a5c882"
-                >
-                  <span class="action-icon">🌞</span>
-                  <span class="action-text">重置次日</span>
-                </button>
-              </section>
-            </div>
-          </section>
 
-          <!-- 3. 数据仪表盘区 -->
-          <section class="stats-dashboard">
-            <!-- 卡片 A: 饮食摄入 -->
-            <div class="stat-card card-diet">
-              <div class="stat-icon">🍽️</div>
-              <div class="stat-content">
-                <div class="stat-title">今日摄入</div>
-                <div class="stat-value highlight-eat">
-                  1200 <small>kcal</small>
-                </div>
-                <div class="stat-quote">
-                  "早餐吃得像国王，现在还能再吃点吗？"
-                </div>
-              </div>
-            </div>
-            <!-- 卡片 B: 消耗 -->
-            <div class="stat-card card-exercise">
-              <div class="stat-icon">🔥</div>
-              <div class="stat-content">
-                <div class="stat-title">运动消耗</div>
-                <div class="stat-value highlight-exercise">
-                  450 <small>kcal</small>
-                </div>
-                <div class="stat-quote">"汗水不会背叛你！"</div>
-              </div>
-            </div>
-            <!-- 卡片 C: 结算 -->
-            <div class="stat-card card-deficit full-width">
-              <div class="stat-icon">🌟</div>
-              <div class="stat-content">
-                <div class="stat-title">今日缺口结算</div>
-                <div class="stat-value highlight-deficit">
-                  -600 <small>kcal</small>
-                </div>
-                <div class="stat-quote">
-                  "干得漂亮！又打败了 600 大卡的脂肪怪！"
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
 
-        <!-- 手账视图 (默认隐藏) -->
-        <div class="view-container hidden" id="view-journal">
-          <!-- 顶部日期与热量环 -->
-          <header class="journal-header">
-            <div class="journal-date-info">
-              <h2 class="huge-date">
-                <span id="journal-date-text">10月24日</span>
-              </h2>
-              <div class="date-subtitle">生活饮食记录</div>
+                    <!-- 轨道 + 进度条区域 -->
+                    <div class="survival-track-wrapper">
+                        <div class="survival-track">
+                            <!-- 刻度 -->
+                            <div class="track-markers">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
 
-              <!-- 视图切换控件 Tabs -->
-              <div class="view-tabs-group">
-                <button class="view-tab active" id="tab-day-view">
-                  <span class="nav-arrow" id="nav-prev-day">‹</span>
-                  <span class="tab-label">今天</span>
-                  <span class="nav-arrow" id="nav-next-day">›</span>
-                </button>
-                <button class="view-tab" id="tab-month-view">
-                  <span class="tab-icon">📅</span>
-                  <span class="tab-label">月历</span>
-                </button>
-              </div>
-            </div>
+                            <!-- 动态填充条（宽度由 JS 控制） -->
+                            <div class="survival-fill" id="survivalFill"></div>
+                            <!-- 体力条上的小人化身（右侧对齐当前宽度） -->
+                            <div class="survival-avatar" id="survivalAvatar">
+                                <div class="sv-avatar-hat">
+                                    <div class="hat-top"></div>
+                                    <div class="hat-brim"></div>
+                                </div>
+                                <div class="sv-avatar-head">
+                                    <div class="sv-eye left"></div>
+                                    <div class="sv-eye right"></div>
+                                </div>
+                                <div class="sv-avatar-body">
+                                    <div class="sv-pants"></div>
+                                </div>
+                                <div class="sv-sweat" id="svSweat" style="display: none">
+                                    💧
+                                </div>
+                            </div>
+                            <!-- 飘字动态插入到此容器内 -->
+                            <div id="floatContainer" class="float-container"></div>
+                        </div>
 
-            <div class="daily-calorie-ring">
-              <div class="ring-circle">
-                <div class="ring-text">
-                  <span class="ring-num">300</span>
-                  <span class="ring-label">kcal</span>
-                </div>
-              </div>
-            </div>
-          </header>
+                        <!-- 4. 快捷动作触发区 (挪入进度条内) -->
+                        <section class="quick-actions mini-actions">
+                            <button class="btn-action bg-eat" id="action-eat-big">
+                                <span class="action-icon">🍔</span>
+                                <span class="action-text">大餐 (-500)</span>
+                            </button>
+                            <button class="btn-action bg-eat" id="action-eat">
+                                <span class="action-icon">🍎</span>
+                                <span class="action-text">进食 (-200)</span>
+                            </button>
+                            <button class="btn-action bg-exercise" id="action-exercise">
+                                <span class="action-icon">🏃</span>
+                                <span class="action-text">运动 (+180)</span>
+                            </button>
+                            <button class="btn-action btn-reset" id="action-reset" style="background-color: #a5c882">
+                                <span class="action-icon">🌞</span>
+                                <span class="action-text">重置次日</span>
+                            </button>
+                        </section>
+                    </div>
+                </section>
 
-          <div class="journal-content-wrapper">
-            <!-- 日视图：时间轴 -->
-            <div class="journal-timeline active-view" id="journal-day-view">
-              <!-- 单个时间点记录：早餐 -->
-              <div class="timeline-item">
-                <div class="time-marker">
-                  <span class="time">09:00</span>
-                  <span class="dot"></span>
-                </div>
-                <div class="timeline-content">
-                  <div class="meal-photo-placeholder">
-                    <span class="emoji">🍳</span>
-                  </div>
-                  <div class="meal-info">
-                    <h4>早餐 <span class="meal-cal">(350 kcal)</span></h4>
-                    <p>全麦吐司配牛油果，无糖豆浆，煎蛋一小只。</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 单个时间点记录：午餐 -->
-              <div class="timeline-item">
-                <div class="time-marker">
-                  <span class="time">12:30</span>
-                  <span class="dot"></span>
-                </div>
-                <div class="timeline-content">
-                  <div class="meal-photo-placeholder lunch-bg">
-                    <span class="emoji">🥗</span>
-                  </div>
-                  <div class="meal-info">
-                    <h4>午餐 <span class="meal-cal">(600 kcal)</span></h4>
-                    <p>减脂鸡胸肉沙拉，配油醋汁，小份糙米饭。</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 单个时间点记录：运动 -->
-              <div class="timeline-item">
-                <div class="time-marker">
-                  <span class="time">18:00</span>
-                  <span class="dot sport-dot"></span>
-                </div>
-                <div class="timeline-content sport-card">
-                  <div class="sport-icon">🏃</div>
-                  <div class="meal-info">
-                    <h4>傍晚慢跑</h4>
-                    <p class="sport-duration">45 分钟 · 消耗 400 kcal</p>
-                  </div>
-                </div>
-              </div>
+                <!-- 3. 数据仪表盘区 -->
+                <section class="stats-dashboard">
+                    <!-- 卡片 A: 饮食摄入 -->
+                    <div class="stat-card card-diet">
+                        <div class="stat-icon">🍽️</div>
+                        <div class="stat-content">
+                            <div class="stat-title">今日摄入</div>
+                            <div class="stat-value highlight-eat">
+                                1200 <small>kcal</small>
+                            </div>
+                            <div class="stat-quote">
+                                "早餐吃得像国王，现在还能再吃点吗？"
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 卡片 B: 消耗 -->
+                    <div class="stat-card card-exercise">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-content">
+                            <div class="stat-title">运动消耗</div>
+                            <div class="stat-value highlight-exercise">
+                                450 <small>kcal</small>
+                            </div>
+                            <div class="stat-quote">"汗水不会背叛你！"</div>
+                        </div>
+                    </div>
+                    <!-- 卡片 C: 结算 -->
+                    <div class="stat-card card-deficit full-width">
+                        <div class="stat-icon">🌟</div>
+                        <div class="stat-content">
+                            <div class="stat-title">今日缺口结算</div>
+                            <div class="stat-value highlight-deficit">
+                                -600 <small>kcal</small>
+                            </div>
+                            <div class="stat-quote">
+                                "干得漂亮！又打败了 600 大卡的脂肪怪！"
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
 
-            <!-- 月视图：日历 (默认隐藏) -->
-            <div class="journal-calendar hidden-view" id="journal-month-view">
-              <div class="calendar-grid">
-                <div class="calendar-weekday">一</div>
-                <div class="calendar-weekday">二</div>
-                <div class="calendar-weekday">三</div>
-                <div class="calendar-weekday">四</div>
-                <div class="calendar-weekday">五</div>
-                <div class="calendar-weekday">六</div>
-                <div class="calendar-weekday">日</div>
+            <!-- 手账视图 (默认隐藏) -->
+            <div class="view-container hidden" id="view-journal">
+                <!-- 顶部日期与热量环 -->
+                <header class="journal-header">
+                    <div class="journal-date-info">
+                        <h2 class="huge-date">
+                            <span id="journal-date-text">10月24日</span>
+                        </h2>
+                        <div class="date-subtitle">生活饮食记录</div>
 
-                <!-- 占位日期方块 -->
-                <div class="calendar-day empty"></div>
-                <div class="calendar-day empty"></div>
-                <div class="calendar-day">1</div>
-                <div class="calendar-day">2</div>
-                <div class="calendar-day">
-                  3
-                  <div class="day-dot"></div>
+                        <!-- 视图切换控件 Tabs -->
+                        <div class="view-tabs-group">
+                            <button class="view-tab active" id="tab-day-view">
+                                <span class="nav-arrow" id="nav-prev-day">‹</span>
+                                <span class="tab-label">今天</span>
+                                <span class="nav-arrow" id="nav-next-day">›</span>
+                            </button>
+                            <button class="view-tab" id="tab-month-view">
+                                <span class="tab-icon">📅</span>
+                                <span class="tab-label">月历</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="daily-calorie-ring">
+                        <div class="ring-circle">
+                            <div class="ring-text">
+                                <span class="ring-num">300</span>
+                                <span class="ring-label">kcal</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="journal-content-wrapper">
+                    <!-- 日视图：时间轴 -->
+                    <div class="journal-timeline active-view" id="journal-day-view">
+                        <!-- 单个时间点记录：早餐 -->
+                        <div class="timeline-item">
+                            <div class="time-marker">
+                                <span class="time">09:00</span>
+                                <span class="dot"></span>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="meal-photo-placeholder">
+                                    <span class="emoji">🍳</span>
+                                </div>
+                                <div class="meal-info">
+                                    <h4>早餐 <span class="meal-cal">(350 kcal)</span></h4>
+                                    <p>全麦吐司配牛油果，无糖豆浆，煎蛋一小只。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 单个时间点记录：午餐 -->
+                        <div class="timeline-item">
+                            <div class="time-marker">
+                                <span class="time">12:30</span>
+                                <span class="dot"></span>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="meal-photo-placeholder lunch-bg">
+                                    <span class="emoji">🥗</span>
+                                </div>
+                                <div class="meal-info">
+                                    <h4>午餐 <span class="meal-cal">(600 kcal)</span></h4>
+                                    <p>减脂鸡胸肉沙拉，配油醋汁，小份糙米饭。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 单个时间点记录：运动 -->
+                        <div class="timeline-item">
+                            <div class="time-marker">
+                                <span class="time">18:00</span>
+                                <span class="dot sport-dot"></span>
+                            </div>
+                            <div class="timeline-content sport-card">
+                                <div class="sport-icon">🏃</div>
+                                <div class="meal-info">
+                                    <h4>傍晚慢跑</h4>
+                                    <p class="sport-duration">45 分钟 · 消耗 400 kcal</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 月视图：日历 (默认隐藏) -->
+                    <div class="journal-calendar hidden-view" id="journal-month-view">
+                        <div class="calendar-grid">
+                            <div class="calendar-weekday">一</div>
+                            <div class="calendar-weekday">二</div>
+                            <div class="calendar-weekday">三</div>
+                            <div class="calendar-weekday">四</div>
+                            <div class="calendar-weekday">五</div>
+                            <div class="calendar-weekday">六</div>
+                            <div class="calendar-weekday">日</div>
+
+                            <!-- 占位日期方块 -->
+                            <div class="calendar-day empty"></div>
+                            <div class="calendar-day empty"></div>
+                            <div class="calendar-day">1</div>
+                            <div class="calendar-day">2</div>
+                            <div class="calendar-day">
+                                3
+                                <div class="day-dot"></div>
+                            </div>
+                            <div class="calendar-day">4</div>
+                            <div class="calendar-day">5</div>
+                            <!-- ...后续可通过 JS 动态生成，这里给个示意... -->
+                            <div class="calendar-day">
+                                24
+                                <div class="day-dot active"></div>
+                            </div>
+                        </div>
+                        <div class="placeholder-box">这里可以展示选中日期的简报</div>
+                    </div>
                 </div>
-                <div class="calendar-day">4</div>
-                <div class="calendar-day">5</div>
-                <!-- ...后续可通过 JS 动态生成，这里给个示意... -->
-                <div class="calendar-day">
-                  24
-                  <div class="day-dot active"></div>
-                </div>
-              </div>
-              <div class="placeholder-box">这里可以展示选中日期的简报</div>
             </div>
-          </div>
-        </div>
-      </main>
+        </main>
     </div>
 
     <!-- 弹窗 Popovers (重新加入用于 Tabs 绑定) -->
     <!-- 1. 精确日历选择面板 (Day Picker) -->
     <div class="custom-picker-popover hidden" id="popover-date-picker">
-      <div class="picker-header">
-        <button class="picker-nav-btn" id="picker-date-prev-year">«</button>
-        <button class="picker-nav-btn" id="picker-date-prev-month">‹</button>
-        <div class="picker-current-view" id="picker-date-title">
-          2026 年 10 月
+        <div class="picker-header">
+            <button class="picker-nav-btn" id="picker-date-prev-year">«</button>
+            <button class="picker-nav-btn" id="picker-date-prev-month">‹</button>
+            <div class="picker-current-view" id="picker-date-title">
+                2026 年 10 月
+            </div>
+            <button class="picker-nav-btn" id="picker-date-next-month">›</button>
+            <button class="picker-nav-btn" id="picker-date-next-year">»</button>
         </div>
-        <button class="picker-nav-btn" id="picker-date-next-month">›</button>
-        <button class="picker-nav-btn" id="picker-date-next-year">»</button>
-      </div>
-      <div class="picker-body">
-        <div class="picker-weekdays">
-          <span>一</span><span>二</span><span>三</span><span>四</span
-          ><span>五</span><span>六</span><span>日</span>
+        <div class="picker-body">
+            <div class="picker-weekdays">
+                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+            </div>
+            <!-- 网格由 JS 动态生成 -->
+            <div class="picker-days-grid" id="picker-date-grid"></div>
         </div>
-        <!-- 网格由 JS 动态生成 -->
-        <div class="picker-days-grid" id="picker-date-grid"></div>
-      </div>
     </div>
 
     <!-- 2. 月份选择面板 (Month Picker) -->
     <div class="custom-picker-popover hidden" id="popover-month-picker">
-      <div class="picker-header">
-        <button class="picker-nav-btn" id="picker-month-prev-year">«</button>
-        <div class="picker-current-view" id="picker-month-title">2026 年</div>
-        <button class="picker-nav-btn" id="picker-month-next-year">»</button>
-      </div>
-      <div class="picker-body">
-        <!-- 12宫格月份由 JS 动态生成 -->
-        <div class="picker-months-grid" id="picker-month-grid"></div>
-      </div>
+        <div class="picker-header">
+            <button class="picker-nav-btn" id="picker-month-prev-year">«</button>
+            <div class="picker-current-view" id="picker-month-title">2026 年</div>
+            <button class="picker-nav-btn" id="picker-month-next-year">»</button>
+        </div>
+        <div class="picker-body">
+            <!-- 12宫格月份由 JS 动态生成 -->
+            <div class="picker-months-grid" id="picker-month-grid"></div>
+        </div>
     </div>
     <!-- 3. 用户资料设置弹窗 (居中 Modal) -->
     <div class="modal-overlay hidden" id="profile-modal-overlay">
-      <div class="profile-settings-modal">
-        <header class="modal-header">
-          <h3>个人资料卡</h3>
-          <button class="close-btn" id="close-profile-btn">×</button>
-        </header>
+        <div class="profile-settings-modal">
+            <header class="modal-header">
+                <h3>个人资料卡</h3>
+                <button class="close-btn" id="close-profile-btn">×</button>
+            </header>
 
-        <div class="modal-body" id="profile-modal-body">
-          <!-- 左列：基础资料与设置 -->
-          <div class="modal-left-panel">
-            <!-- 顶部：头像与昵称 -->
-            <div class="settings-top-section">
-              <div class="settings-avatar-edit">
-                <div class="settings-avatar" id="current-avatar">🌿</div>
-                <button class="edit-avatar-btn" id="btn-change-avatar">
-                  更换头像
+            <div class="modal-body" id="profile-modal-body">
+                <!-- 左列：基础资料与设置 -->
+                <div class="modal-left-panel">
+                    <!-- 顶部：头像与昵称 -->
+                    <div class="settings-top-section">
+                        <div class="settings-avatar-edit">
+                            <div class="settings-avatar" id="current-avatar">🌿</div>
+                            <button class="edit-avatar-btn" id="btn-change-avatar">
+                                更换头像
+                            </button>
+                        </div>
+                        <div class="settings-name-edit">
+                            <label>居民昵称</label>
+                            <input type="text" class="styled-input" id="input-nickname" value="冒险者" />
+                        </div>
+                    </div>
+
+                    <!-- 底部：身体数据 -->
+                    <div class="settings-data-section">
+                        <h4>身体数据</h4>
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <label>年龄</label>
+                                <div class="input-with-unit">
+                                    <input type="number" class="styled-input" id="input-age" value="25" min="1"
+                                        max="120" />
+                                    <span class="unit">岁</span>
+                                </div>
+                            </div>
+                            <div class="data-item">
+                                <label>身高</label>
+                                <div class="input-with-unit">
+                                    <input type="number" class="styled-input" id="input-height" value="170" step="0.1"
+                                        min="50" max="250" />
+                                    <span class="unit">cm</span>
+                                </div>
+                            </div>
+                            <div class="data-item">
+                                <label>体重</label>
+                                <div class="input-with-unit">
+                                    <input type="number" class="styled-input" id="input-weight" value="65.0" step="0.1"
+                                        min="20" max="300" />
+                                    <span class="unit">kg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 动态 BMI 指示器 -->
+                        <div class="bmi-indicator-wrapper">
+                            <div class="bmi-header">
+                                <span class="bmi-title">体质指数 (BMI)</span>
+                                <span class="bmi-value" id="bmi-display-value">22.5</span>
+                            </div>
+                            <div class="bmi-bar">
+                                <div class="bmi-segment underweight" title="过轻 (<18.5)"></div>
+                                <div class="bmi-segment normal" title="正常 (18.5 ~ 23.9)"></div>
+                                <div class="bmi-segment overweight" title="超重 (24.0 ~ 27.9)"></div>
+                                <div class="bmi-segment obese" title="肥胖 (≥28)"></div>
+                                <div class="bmi-thumb" id="bmi-thumb">
+                                    <div class="bmi-thumb-label" id="bmi-thumb-label">正常</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 触发展开身材维度的按钮 -->
+                    <button class="btn-expand-measurements" id="toggle-measurements">
+                        <span>🌱 手工录入身体各围度参数</span>
+                        <span class="expand-icon" id="measurements-expand-icon">▶</span>
+                    </button>
+                </div>
+                <!-- 左列结束 -->
+
+                <!-- 右列：动态内容区域 (头像/身材) -->
+                <div class="modal-right-panel hidden-panel" id="modal-right-panel">
+                    <!-- 头像选择库 -->
+                    <div class="right-panel-content hidden" id="avatar-picker-panel">
+                        <div class="panel-header-flex">
+                            <h4>选择化身 🍄</h4>
+                            <button class="close-right-panel-btn" id="close-avatar-picker">
+                                ×
+                            </button>
+                        </div>
+                        <div class="avatar-picker-grid" id="avatar-picker-grid">
+                            <div class="preset-avatar">🍄</div>
+                            <div class="preset-avatar">🐢</div>
+                            <div class="preset-avatar">🌟</div>
+                            <div class="preset-avatar">👑</div>
+                            <div class="preset-avatar">👻</div>
+                            <div class="preset-avatar">🦖</div>
+                            <div class="preset-avatar">🌰</div>
+                            <div class="preset-avatar">🌸</div>
+                            <div class="preset-avatar">☁️</div>
+                            <div class="preset-avatar">🔥</div>
+                            <div class="preset-avatar">🦊</div>
+                            <div class="preset-avatar">🧚</div>
+                            <div class="preset-avatar">🌞</div>
+                            <div class="preset-avatar">🌙</div>
+                            <div class="preset-avatar">⭐</div>
+                            <div class="preset-avatar">🍎</div>
+                            <div class="preset-avatar">🍉</div>
+                            <div class="preset-avatar">🍇</div>
+                            <div class="preset-avatar">🐶</div>
+                            <div class="preset-avatar">🐱</div>
+                            <div class="preset-avatar">🐭</div>
+                            <div class="preset-avatar">🦄</div>
+                            <div class="preset-avatar">🐧</div>
+                            <div class="preset-avatar">🐸</div>
+                        </div>
+                    </div>
+
+                    <!-- 身材维度记录 -->
+                    <div class="right-panel-content hidden" id="measurements-body">
+                        <div class="panel-header-flex">
+                            <h4>身材围度记录 🌱</h4>
+                            <button class="close-right-panel-btn" id="close-measurements-btn">
+                                ×
+                            </button>
+                        </div>
+                        <div class="human-figure-container">
+                            <div class="humanoid-wrapper">
+                                <div class="css-humanoid">
+                                    <div class="human-head"></div>
+                                    <div class="human-torso"></div>
+                                    <div class="human-arm left"></div>
+                                    <div class="human-arm right"></div>
+                                    <div class="human-leg left"></div>
+                                    <div class="human-leg right"></div>
+
+                                    <button class="measure-point point-chest" data-part="chest" data-name="胸围"></button>
+                                    <button class="measure-point point-waist" data-part="waist" data-name="腰围"></button>
+                                    <button class="measure-point point-hip" data-part="hip" data-name="臀围"></button>
+                                    <button class="measure-point point-arm left-arm" data-part="arm_left"
+                                        data-name="左大臂"></button>
+                                    <button class="measure-point point-arm right-arm" data-part="arm_right"
+                                        data-name="右大臂"></button>
+                                    <button class="measure-point point-thigh left-thigh" data-part="thigh_left"
+                                        data-name="左大腿"></button>
+                                    <button class="measure-point point-thigh right-thigh" data-part="thigh_right"
+                                        data-name="右大腿"></button>
+                                    <button class="measure-point point-calf left-calf" data-part="calf_left"
+                                        data-name="左小腿"></button>
+                                    <button class="measure-point point-calf right-calf" data-part="calf_right"
+                                        data-name="右小腿"></button>
+                                </div>
+                            </div>
+
+                            <div class="measure-input-popover hidden" id="measure-popover">
+                                <label id="measure-popover-title">胸围</label>
+                                <div class="input-with-unit small">
+                                    <input type="number" class="styled-input" id="active-measure-input" step="0.1" />
+                                    <span class="unit">cm</span>
+                                </div>
+                                <button class="popover-confirm-btn" id="btn-confirm-measure">
+                                    ✔
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <button class="btn-fold-panel hidden" id="btn-fold-panel">
+                    « 收起
                 </button>
-              </div>
-              <div class="settings-name-edit">
-                <label>居民昵称</label>
-                <input
-                  type="text"
-                  class="styled-input"
-                  id="input-nickname"
-                  value="冒险者"
-                />
-              </div>
-            </div>
-
-            <!-- 底部：身体数据 -->
-            <div class="settings-data-section">
-              <h4>身体数据</h4>
-              <div class="data-grid">
-                <div class="data-item">
-                  <label>年龄</label>
-                  <div class="input-with-unit">
-                    <input
-                      type="number"
-                      class="styled-input"
-                      id="input-age"
-                      value="25"
-                      min="1"
-                      max="120"
-                    />
-                    <span class="unit">岁</span>
-                  </div>
-                </div>
-                <div class="data-item">
-                  <label>身高</label>
-                  <div class="input-with-unit">
-                    <input
-                      type="number"
-                      class="styled-input"
-                      id="input-height"
-                      value="170"
-                      step="0.1"
-                      min="50"
-                      max="250"
-                    />
-                    <span class="unit">cm</span>
-                  </div>
-                </div>
-                <div class="data-item">
-                  <label>体重</label>
-                  <div class="input-with-unit">
-                    <input
-                      type="number"
-                      class="styled-input"
-                      id="input-weight"
-                      value="65.0"
-                      step="0.1"
-                      min="20"
-                      max="300"
-                    />
-                    <span class="unit">kg</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 动态 BMI 指示器 -->
-              <div class="bmi-indicator-wrapper">
-                <div class="bmi-header">
-                  <span class="bmi-title">体质指数 (BMI)</span>
-                  <span class="bmi-value" id="bmi-display-value">22.5</span>
-                </div>
-                <div class="bmi-bar">
-                  <div
-                    class="bmi-segment underweight"
-                    title="过轻 (<18.5)"
-                  ></div>
-                  <div
-                    class="bmi-segment normal"
-                    title="正常 (18.5 ~ 23.9)"
-                  ></div>
-                  <div
-                    class="bmi-segment overweight"
-                    title="超重 (24.0 ~ 27.9)"
-                  ></div>
-                  <div class="bmi-segment obese" title="肥胖 (≥28)"></div>
-                  <div class="bmi-thumb" id="bmi-thumb">
-                    <div class="bmi-thumb-label" id="bmi-thumb-label">正常</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 触发展开身材维度的按钮 -->
-            <button class="btn-expand-measurements" id="toggle-measurements">
-              <span>🌱 手工录入身体各围度参数</span>
-              <span class="expand-icon" id="measurements-expand-icon">▶</span>
-            </button>
-          </div>
-          <!-- 左列结束 -->
-
-          <!-- 右列：动态内容区域 (头像/身材) -->
-          <div class="modal-right-panel hidden-panel" id="modal-right-panel">
-            <!-- 头像选择库 -->
-            <div class="right-panel-content hidden" id="avatar-picker-panel">
-              <div class="panel-header-flex">
-                <h4>选择化身 🍄</h4>
-                <button class="close-right-panel-btn" id="close-avatar-picker">
-                  ×
-                </button>
-              </div>
-              <div class="avatar-picker-grid" id="avatar-picker-grid">
-                <div class="preset-avatar">🍄</div>
-                <div class="preset-avatar">🐢</div>
-                <div class="preset-avatar">🌟</div>
-                <div class="preset-avatar">👑</div>
-                <div class="preset-avatar">👻</div>
-                <div class="preset-avatar">🦖</div>
-                <div class="preset-avatar">🌰</div>
-                <div class="preset-avatar">🌸</div>
-                <div class="preset-avatar">☁️</div>
-                <div class="preset-avatar">🔥</div>
-                <div class="preset-avatar">🦊</div>
-                <div class="preset-avatar">🧚</div>
-                <div class="preset-avatar">🌞</div>
-                <div class="preset-avatar">🌙</div>
-                <div class="preset-avatar">⭐</div>
-                <div class="preset-avatar">🍎</div>
-                <div class="preset-avatar">🍉</div>
-                <div class="preset-avatar">🍇</div>
-                <div class="preset-avatar">🐶</div>
-                <div class="preset-avatar">🐱</div>
-                <div class="preset-avatar">🐭</div>
-                <div class="preset-avatar">🦄</div>
-                <div class="preset-avatar">🐧</div>
-                <div class="preset-avatar">🐸</div>
-              </div>
-            </div>
-
-            <!-- 身材维度记录 -->
-            <div class="right-panel-content hidden" id="measurements-body">
-              <div class="panel-header-flex">
-                <h4>身材围度记录 🌱</h4>
-                <button
-                  class="close-right-panel-btn"
-                  id="close-measurements-btn"
-                >
-                  ×
-                </button>
-              </div>
-              <div class="human-figure-container">
-                <div class="humanoid-wrapper">
-                  <div class="css-humanoid">
-                    <div class="human-head"></div>
-                    <div class="human-torso"></div>
-                    <div class="human-arm left"></div>
-                    <div class="human-arm right"></div>
-                    <div class="human-leg left"></div>
-                    <div class="human-leg right"></div>
-
-                    <button
-                      class="measure-point point-chest"
-                      data-part="chest"
-                      data-name="胸围"
-                    ></button>
-                    <button
-                      class="measure-point point-waist"
-                      data-part="waist"
-                      data-name="腰围"
-                    ></button>
-                    <button
-                      class="measure-point point-hip"
-                      data-part="hip"
-                      data-name="臀围"
-                    ></button>
-                    <button
-                      class="measure-point point-arm left-arm"
-                      data-part="arm_left"
-                      data-name="左大臂"
-                    ></button>
-                    <button
-                      class="measure-point point-arm right-arm"
-                      data-part="arm_right"
-                      data-name="右大臂"
-                    ></button>
-                    <button
-                      class="measure-point point-thigh left-thigh"
-                      data-part="thigh_left"
-                      data-name="左大腿"
-                    ></button>
-                    <button
-                      class="measure-point point-thigh right-thigh"
-                      data-part="thigh_right"
-                      data-name="右大腿"
-                    ></button>
-                    <button
-                      class="measure-point point-calf left-calf"
-                      data-part="calf_left"
-                      data-name="左小腿"
-                    ></button>
-                    <button
-                      class="measure-point point-calf right-calf"
-                      data-part="calf_right"
-                      data-name="右小腿"
-                    ></button>
-                  </div>
-                </div>
-
-                <div class="measure-input-popover hidden" id="measure-popover">
-                  <label id="measure-popover-title">胸围</label>
-                  <div class="input-with-unit small">
-                    <input
-                      type="number"
-                      class="styled-input"
-                      id="active-measure-input"
-                      step="0.1"
-                    />
-                    <span class="unit">cm</span>
-                  </div>
-                  <button class="popover-confirm-btn" id="btn-confirm-measure">
-                    ✔
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                <button class="btn-primary" id="save-profile-btn">保存设置</button>
+            </footer>
         </div>
-
-        <footer class="modal-footer">
-          <button class="btn-fold-panel hidden" id="btn-fold-panel">
-            « 收起
-          </button>
-          <button class="btn-primary" id="save-profile-btn">保存设置</button>
-        </footer>
-      </div>
     </div>
     <!-- 交互逻辑 -->
     <script src="js/app.js"></script>
-  </body>
+</body>
+
 </html>
