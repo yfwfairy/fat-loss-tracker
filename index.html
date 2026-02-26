@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <script src="js/picker.js" defer></script>
     <script src="js/profile.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
 </head>
 
 <body>
@@ -26,7 +27,7 @@
                 </div>
                 <div class="brand-info">
                     <h1>冒险者</h1>
-                    <span class="brand-sub">减脂小村居民</span>
+                    <span class="brand-sub">LV.5 燃脂新手</span>
                 </div>
             </div>
 
@@ -54,76 +55,78 @@
         <main class="main-content" id="app-content">
             <!-- 视图会通过 JS 动态挂载到这里，当前直接把 dashboard 放这里作为初版 -->
             <div class="view-container" id="view-dashboard">
-                <header class="view-header">
-                    <h2>今日旅程</h2>
-                    <div class="date-badge">10月24日，周四</div>
-                </header>
 
                 <!-- 2. 核心游戏化路线区 (星露谷生存体力条) -->
                 <section class="survival-game-card">
+                    <!-- 装饰小草 -->
+                    <div class="grass-tuft">
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                    </div>
+                    <!-- 标题行 -->
                     <div class="game-header-panel">
                         <div class="game-title-group">
-                            <h3>今日体力</h3>
-                            <span class="game-subtext">目标 1500 kcal</span>
+                            <span class="game-title-icon">🥕</span>
+                            <span class="game-title-text">今日体力·卡路里之路</span>
                         </div>
-                        <div class="game-score">
-                            <span id="kcalDisplay">1500 / 1500</span> kcal
-                        </div>
+                        <div class="game-kcal-counter" id="kcalDisplay">1500 / 1500</div>
                     </div>
-
-
-
                     <!-- 轨道 + 进度条区域 -->
-                    <div class="survival-track-wrapper">
+                    <div class="track-wrapper" id="trackWrapper">
                         <div class="survival-track">
                             <!-- 刻度 -->
-                            <div class="track-markers">
-                                <span></span><span></span><span></span><span></span>
+                            <div class="track-marks">
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                                <div></div>
                             </div>
-
                             <!-- 动态填充条（宽度由 JS 控制） -->
-                            <div class="survival-fill" id="survivalFill"></div>
+                            <div class="survival-fill" id="survivalFill" style="width: 100%;"></div>
                             <!-- 体力条上的小人化身（右侧对齐当前宽度） -->
-                            <div class="survival-avatar" id="survivalAvatar">
+                            <div class="survival-avatar" id="survivalAvatar" style="right: 0%;">
+                                <!-- 用纯 CSS 拼接的小人，基于原型 -->
                                 <div class="sv-avatar-hat">
-                                    <div class="hat-top"></div>
                                     <div class="hat-brim"></div>
+                                    <div class="hat-top"></div>
                                 </div>
                                 <div class="sv-avatar-head">
                                     <div class="sv-eye left"></div>
                                     <div class="sv-eye right"></div>
+                                    <div class="sv-sweat" id="svSweat" style="display: none;"></div>
                                 </div>
                                 <div class="sv-avatar-body">
                                     <div class="sv-pants"></div>
                                 </div>
-                                <div class="sv-sweat" id="svSweat" style="display: none">
-                                    💧
-                                </div>
                             </div>
+
                             <!-- 飘字动态插入到此容器内 -->
-                            <div id="floatContainer" class="float-container"></div>
+                            <div class="float-text-container" id="floatContainer"></div>
                         </div>
 
                         <!-- 4. 快捷动作触发区 (挪入进度条内) -->
-                        <section class="quick-actions mini-actions">
-                            <button class="btn-action bg-eat" id="action-eat-big">
-                                <span class="action-icon">🍔</span>
+                        <section class="quick-actions">
+                            <button class="btn-action primary-action" id="action-eat">
+                                <span class="action-icon">🍎</span>
+                                <span class="action-text">记饮食 (-200)</span>
+                            </button>
+                            <button class="btn-action" id="action-eat-big">
+                                <span class="action-icon">🍕</span>
                                 <span class="action-text">大餐 (-500)</span>
                             </button>
-                            <button class="btn-action bg-eat" id="action-eat">
-                                <span class="action-icon">🍎</span>
-                                <span class="action-text">进食 (-200)</span>
-                            </button>
-                            <button class="btn-action bg-exercise" id="action-exercise">
+                            <button class="btn-action" id="action-exercise">
                                 <span class="action-icon">🏃</span>
-                                <span class="action-text">运动 (+180)</span>
+                                <span class="action-text">记运动 (+180)</span>
                             </button>
-                            <button class="btn-action btn-reset" id="action-reset" style="background-color: #a5c882">
+                            <button class="btn-action btn-reset" id="action-reset" style="background-color: #a5c882;">
                                 <span class="action-icon">🌞</span>
                                 <span class="action-text">重置次日</span>
                             </button>
                         </section>
-                    </div>
                 </section>
 
                 <!-- 3. 数据仪表盘区 -->
@@ -133,23 +136,19 @@
                         <div class="stat-icon">🍽️</div>
                         <div class="stat-content">
                             <div class="stat-title">今日摄入</div>
-                            <div class="stat-value highlight-eat">
-                                1200 <small>kcal</small>
-                            </div>
-                            <div class="stat-quote">
-                                "早餐吃得像国王，现在还能再吃点吗？"
+                            <div class="stat-value">1200 <small>kcal</small></div>
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width: 70%; background: #FFB7B2;"></div>
                             </div>
                         </div>
                     </div>
                     <!-- 卡片 B: 消耗 -->
-                    <div class="stat-card card-exercise">
+                    <div class="stat-card card-burn">
                         <div class="stat-icon">🔥</div>
                         <div class="stat-content">
-                            <div class="stat-title">运动消耗</div>
-                            <div class="stat-value highlight-exercise">
-                                450 <small>kcal</small>
-                            </div>
-                            <div class="stat-quote">"汗水不会背叛你！"</div>
+                            <div class="stat-title">总消耗</div>
+                            <div class="stat-value">1800 <small>kcal</small></div>
+                            <div class="stat-sub">基础 1500 + 活动 300</div>
                         </div>
                     </div>
                     <!-- 卡片 C: 结算 -->
@@ -157,12 +156,8 @@
                         <div class="stat-icon">🌟</div>
                         <div class="stat-content">
                             <div class="stat-title">今日缺口结算</div>
-                            <div class="stat-value highlight-deficit">
-                                -600 <small>kcal</small>
-                            </div>
-                            <div class="stat-quote">
-                                "干得漂亮！又打败了 600 大卡的脂肪怪！"
-                            </div>
+                            <div class="stat-value highlight-deficit">-600 <small>kcal</small></div>
+                            <div class="stat-quote">"干得漂亮！又打败了 600 大卡的脂肪怪！"</div>
                         </div>
                     </div>
                 </section>
@@ -296,9 +291,7 @@
         <div class="picker-header">
             <button class="picker-nav-btn" id="picker-date-prev-year">«</button>
             <button class="picker-nav-btn" id="picker-date-prev-month">‹</button>
-            <div class="picker-current-view" id="picker-date-title">
-                2026 年 10 月
-            </div>
+            <div class="picker-current-view" id="picker-date-title">2026 年 10 月</div>
             <button class="picker-nav-btn" id="picker-date-next-month">›</button>
             <button class="picker-nav-btn" id="picker-date-next-year">»</button>
         </div>
@@ -338,13 +331,11 @@
                     <div class="settings-top-section">
                         <div class="settings-avatar-edit">
                             <div class="settings-avatar" id="current-avatar">🌿</div>
-                            <button class="edit-avatar-btn" id="btn-change-avatar">
-                                更换头像
-                            </button>
+                            <button class="edit-avatar-btn" id="btn-change-avatar">更换头像</button>
                         </div>
                         <div class="settings-name-edit">
                             <label>居民昵称</label>
-                            <input type="text" class="styled-input" id="input-nickname" value="冒险者" />
+                            <input type="text" class="styled-input" id="input-nickname" value="冒险者">
                         </div>
                     </div>
 
@@ -356,7 +347,7 @@
                                 <label>年龄</label>
                                 <div class="input-with-unit">
                                     <input type="number" class="styled-input" id="input-age" value="25" min="1"
-                                        max="120" />
+                                        max="120">
                                     <span class="unit">岁</span>
                                 </div>
                             </div>
@@ -364,7 +355,7 @@
                                 <label>身高</label>
                                 <div class="input-with-unit">
                                     <input type="number" class="styled-input" id="input-height" value="170" step="0.1"
-                                        min="50" max="250" />
+                                        min="50" max="250">
                                     <span class="unit">cm</span>
                                 </div>
                             </div>
@@ -372,7 +363,7 @@
                                 <label>体重</label>
                                 <div class="input-with-unit">
                                     <input type="number" class="styled-input" id="input-weight" value="65.0" step="0.1"
-                                        min="20" max="300" />
+                                        min="20" max="300">
                                     <span class="unit">kg</span>
                                 </div>
                             </div>
@@ -401,18 +392,16 @@
                         <span>🌱 手工录入身体各围度参数</span>
                         <span class="expand-icon" id="measurements-expand-icon">▶</span>
                     </button>
-                </div>
-                <!-- 左列结束 -->
+                </div><!-- 左列结束 -->
 
                 <!-- 右列：动态内容区域 (头像/身材) -->
                 <div class="modal-right-panel hidden-panel" id="modal-right-panel">
+
                     <!-- 头像选择库 -->
                     <div class="right-panel-content hidden" id="avatar-picker-panel">
                         <div class="panel-header-flex">
                             <h4>选择化身 🍄</h4>
-                            <button class="close-right-panel-btn" id="close-avatar-picker">
-                                ×
-                            </button>
+                            <button class="close-right-panel-btn" id="close-avatar-picker">×</button>
                         </div>
                         <div class="avatar-picker-grid" id="avatar-picker-grid">
                             <div class="preset-avatar">🍄</div>
@@ -446,9 +435,7 @@
                     <div class="right-panel-content hidden" id="measurements-body">
                         <div class="panel-header-flex">
                             <h4>身材围度记录 🌱</h4>
-                            <button class="close-right-panel-btn" id="close-measurements-btn">
-                                ×
-                            </button>
+                            <button class="close-right-panel-btn" id="close-measurements-btn">×</button>
                         </div>
                         <div class="human-figure-container">
                             <div class="humanoid-wrapper">
@@ -481,22 +468,19 @@
                             <div class="measure-input-popover hidden" id="measure-popover">
                                 <label id="measure-popover-title">胸围</label>
                                 <div class="input-with-unit small">
-                                    <input type="number" class="styled-input" id="active-measure-input" step="0.1" />
+                                    <input type="number" class="styled-input" id="active-measure-input" step="0.1">
                                     <span class="unit">cm</span>
                                 </div>
-                                <button class="popover-confirm-btn" id="btn-confirm-measure">
-                                    ✔
-                                </button>
+                                <button class="popover-confirm-btn" id="btn-confirm-measure">✔</button>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
 
             <footer class="modal-footer">
-                <button class="btn-fold-panel hidden" id="btn-fold-panel">
-                    « 收起
-                </button>
+                <button class="btn-fold-panel hidden" id="btn-fold-panel">« 收起</button>
                 <button class="btn-primary" id="save-profile-btn">保存设置</button>
             </footer>
         </div>
