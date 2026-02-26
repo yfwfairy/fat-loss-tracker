@@ -43,11 +43,7 @@
             </nav>
 
             <div class="user-profile">
-                <div class="avatar-placeholder"></div>
-                <div class="user-info">
-                    <div class="user-name">冒险者</div>
-                    <div class="user-streak">🔥 连续 5 天</div>
-                </div>
+                <div class="user-streak">🔥 连续 5 天</div>
             </div>
         </aside>
 
@@ -65,14 +61,25 @@
                         <div class="grass"></div>
                         <div class="grass"></div>
                         <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
                     </div>
                     <!-- 标题行 -->
                     <div class="game-header-panel">
                         <div class="game-title-group">
-                            <span class="game-title-icon">🥕</span>
+                            <span class="game-title-icon">🍓</span>
                             <span class="game-title-text">今日体力·卡路里之路</span>
                         </div>
-                        <div class="game-kcal-counter" id="kcalDisplay">1500 / 1500</div>
+                        <div class="header-kcal-wrapper" style="position: relative;">
+                            <div class="game-kcal-counter" id="kcalDisplay">1500 / 1500</div>
+                            <!-- 飘字现在挂载到仪表盘这里 -->
+                            <div class="float-text-container" id="floatContainer"></div>
+                        </div>
                     </div>
                     <!-- 轨道 + 进度条区域 -->
                     <div class="track-wrapper" id="trackWrapper">
@@ -88,7 +95,7 @@
                             <!-- 动态填充条（宽度由 JS 控制） -->
                             <div class="survival-fill" id="survivalFill" style="width: 100%;"></div>
                             <!-- 体力条上的小人化身（右侧对齐当前宽度） -->
-                            <div class="survival-avatar" id="survivalAvatar" style="right: 0%;">
+                            <div class="survival-avatar" id="survivalAvatar" style="right: 100%;">
                                 <!-- 用纯 CSS 拼接的小人，基于原型 -->
                                 <div class="sv-avatar-hat">
                                     <div class="hat-brim"></div>
@@ -104,29 +111,25 @@
                                 </div>
                             </div>
 
-                            <!-- 飘字动态插入到此容器内 -->
-                            <div class="float-text-container" id="floatContainer"></div>
+
                         </div>
 
                         <!-- 4. 快捷动作触发区 (挪入进度条内) -->
-                        <section class="quick-actions">
-                            <button class="btn-action primary-action" id="action-eat">
+                        <section class="quick-actions wood-actions">
+                            <button class="pixel-btn btn-action-eat" id="action-eat-big">
                                 <span class="action-icon">🍎</span>
-                                <span class="action-text">记饮食 (-200)</span>
+                                <span class="action-text">记摄入</span>
                             </button>
-                            <button class="btn-action" id="action-eat-big">
-                                <span class="action-icon">🍕</span>
-                                <span class="action-text">大餐 (-500)</span>
-                            </button>
-                            <button class="btn-action" id="action-exercise">
+                            <button class="pixel-btn btn-action-exercise" id="action-exercise">
                                 <span class="action-icon">🏃</span>
-                                <span class="action-text">记运动 (+180)</span>
+                                <span class="action-text">记消耗</span>
                             </button>
-                            <button class="btn-action btn-reset" id="action-reset" style="background-color: #a5c882;">
-                                <span class="action-icon">🌞</span>
-                                <span class="action-text">重置次日</span>
+                            <button class="pixel-btn btn-action-reset" id="action-reset">
+                                <span class="action-icon">🔄</span>
+                                <span class="action-text">重置</span>
                             </button>
                         </section>
+                    </div>
                 </section>
 
                 <!-- 3. 数据仪表盘区 -->
@@ -136,9 +139,9 @@
                         <div class="stat-icon">🍽️</div>
                         <div class="stat-content">
                             <div class="stat-title">今日摄入</div>
-                            <div class="stat-value">1200 <small>kcal</small></div>
+                            <div class="stat-value"><span id="dietValue">0</span> <small>kcal</small></div>
                             <div class="stat-bar">
-                                <div class="stat-fill" style="width: 70%; background: #FFB7B2;"></div>
+                                <div class="stat-fill" id="dietBar" style="width: 0%; background: #FFB7B2;"></div>
                             </div>
                         </div>
                     </div>
@@ -147,8 +150,8 @@
                         <div class="stat-icon">🔥</div>
                         <div class="stat-content">
                             <div class="stat-title">总消耗</div>
-                            <div class="stat-value">1800 <small>kcal</small></div>
-                            <div class="stat-sub">基础 1500 + 活动 300</div>
+                            <div class="stat-value"><span id="burnValue">1500</span> <small>kcal</small></div>
+                            <div class="stat-sub" id="burnSub">基础 1500 + 活动 0</div>
                         </div>
                     </div>
                     <!-- 卡片 C: 结算 -->
@@ -156,8 +159,10 @@
                         <div class="stat-icon">🌟</div>
                         <div class="stat-content">
                             <div class="stat-title">今日缺口结算</div>
-                            <div class="stat-value highlight-deficit">-600 <small>kcal</small></div>
-                            <div class="stat-quote">"干得漂亮！又打败了 600 大卡的脂肪怪！"</div>
+                            <div class="stat-value highlight-deficit"><span id="deficitValue">1500</span>
+                                <small>kcal</small>
+                            </div>
+                            <div id="deficitQuote" class="stat-quote">"初始状态。准备好开始今天的挑战了吗？"</div>
                         </div>
                     </div>
                 </section>
@@ -190,7 +195,7 @@
                     <div class="daily-calorie-ring">
                         <div class="ring-circle">
                             <div class="ring-text">
-                                <span class="ring-num">300</span>
+                                <span class="ring-num" id="journalRingNum">0</span>
                                 <span class="ring-label">kcal</span>
                             </div>
                         </div>
@@ -199,90 +204,48 @@
 
                 <div class="journal-content-wrapper">
                     <!-- 日视图：时间轴 -->
-                    <div class="journal-timeline active-view" id="journal-day-view">
-                        <!-- 单个时间点记录：早餐 -->
-                        <div class="timeline-item">
-                            <div class="time-marker">
-                                <span class="time">09:00</span>
-                                <span class="dot"></span>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="meal-photo-placeholder">
-                                    <span class="emoji">🍳</span>
-                                </div>
-                                <div class="meal-info">
-                                    <h4>早餐 <span class="meal-cal">(350 kcal)</span></h4>
-                                    <p>全麦吐司配牛油果，无糖豆浆，煎蛋一小只。</p>
-                                </div>
-                            </div>
+                    <div class="journal-timeline active-view" id="journalTimeline">
+                        <!-- 动态内容由此渲染 -->
+                        <div class="journal-placeholder" id="journalPlaceholder">
+                            <div class="placeholder-icon">✍️</div>
+                            <p>开始今天的记录吧～</p>
                         </div>
-
-                        <!-- 单个时间点记录：午餐 -->
-                        <div class="timeline-item">
-                            <div class="time-marker">
-                                <span class="time">12:30</span>
-                                <span class="dot"></span>
-                            </div>
-                            <div class="timeline-content">
-                                <div class="meal-photo-placeholder lunch-bg">
-                                    <span class="emoji">🥗</span>
-                                </div>
-                                <div class="meal-info">
-                                    <h4>午餐 <span class="meal-cal">(600 kcal)</span></h4>
-                                    <p>减脂鸡胸肉沙拉，配油醋汁，小份糙米饭。</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 单个时间点记录：运动 -->
-                        <div class="timeline-item">
-                            <div class="time-marker">
-                                <span class="time">18:00</span>
-                                <span class="dot sport-dot"></span>
-                            </div>
-                            <div class="timeline-content sport-card">
-                                <div class="sport-icon">🏃</div>
-                                <div class="meal-info">
-                                    <h4>傍晚慢跑</h4>
-                                    <p class="sport-duration">45 分钟 · 消耗 400 kcal</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 月视图：日历 (默认隐藏) -->
-                    <div class="journal-calendar hidden-view" id="journal-month-view">
-                        <div class="calendar-grid">
-                            <div class="calendar-weekday">一</div>
-                            <div class="calendar-weekday">二</div>
-                            <div class="calendar-weekday">三</div>
-                            <div class="calendar-weekday">四</div>
-                            <div class="calendar-weekday">五</div>
-                            <div class="calendar-weekday">六</div>
-                            <div class="calendar-weekday">日</div>
-
-                            <!-- 占位日期方块 -->
-                            <div class="calendar-day empty"></div>
-                            <div class="calendar-day empty"></div>
-                            <div class="calendar-day">1</div>
-                            <div class="calendar-day">2</div>
-                            <div class="calendar-day">
-                                3
-                                <div class="day-dot"></div>
-                            </div>
-                            <div class="calendar-day">4</div>
-                            <div class="calendar-day">5</div>
-                            <!-- ...后续可通过 JS 动态生成，这里给个示意... -->
-                            <div class="calendar-day">
-                                24
-                                <div class="day-dot active"></div>
-                            </div>
-                        </div>
-                        <div class="placeholder-box">这里可以展示选中日期的简报</div>
                     </div>
                 </div>
+
+                <!-- 月视图：日历 (默认隐藏) -->
+                <div class="journal-calendar hidden-view" id="journal-month-view">
+                    <div class="calendar-grid">
+                        <div class="calendar-weekday">一</div>
+                        <div class="calendar-weekday">二</div>
+                        <div class="calendar-weekday">三</div>
+                        <div class="calendar-weekday">四</div>
+                        <div class="calendar-weekday">五</div>
+                        <div class="calendar-weekday">六</div>
+                        <div class="calendar-weekday">日</div>
+
+                        <!-- 占位日期方块 -->
+                        <div class="calendar-day empty"></div>
+                        <div class="calendar-day empty"></div>
+                        <div class="calendar-day">1</div>
+                        <div class="calendar-day">2</div>
+                        <div class="calendar-day">
+                            3
+                            <div class="day-dot"></div>
+                        </div>
+                        <div class="calendar-day">4</div>
+                        <div class="calendar-day">5</div>
+                        <!-- ...后续可通过 JS 动态生成，这里给个示意... -->
+                        <div class="calendar-day">
+                            24
+                            <div class="day-dot active"></div>
+                        </div>
+                    </div>
+                    <div class="placeholder-box">这里可以展示选中日期的简报</div>
+                </div>
             </div>
-        </main>
+    </div>
+    </main>
     </div>
 
     <!-- 弹窗 Popovers (重新加入用于 Tabs 绑定) -->

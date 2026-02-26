@@ -1,20 +1,22 @@
 /* CSS 变量：治愈系低饱和度配色辞典 */
 :root {
     /* 基础背景色 */
-    --bg-main: #FAFAFA;
-    /* 最外层页面的背景：略灰的奶油白 */
-    --bg-surface: #FFFFFF;
-    /* 卡片的背景：纯白 */
-    --bg-sidebar: #F4F1E1;
-    /* 侧边栏背景：更浓郁一点的燕麦色/牛皮纸色 */
+    --bg-main: #8B6A70CC;
+    /* 深浆果色 */
+    --bg-container: #ffffffCC;
+    /* 最外层页面的背景 */
+    --bg-surface: #F3E0D6;
+    /* 暖粉白基底 */
+    --bg-sidebar: #efc879;
+    /* 侧边栏背景 */
 
     /* 主题点缀色 (低饱和度明亮色) */
-    --color-primary: #A3C9A8;
+    --color-primary: #c8a3c9;
     /* 主色：柔和薄荷绿/抹茶绿，传达生命、成长 */
-    --color-primary-hover: #8FBB95;
-    --color-secondary: #84A59D;
+    --color-primary-hover: #c3a7c4;
+    --color-secondary: #9884a5;
     /* 辅色：灰调海蓝，适合做辅修饰或文字高阶色 */
-    --color-accent: #F28482;
+    --color-accent: #9e8490;
     /* 强调色：珊瑚粉/西柚红，用于重要提醒、火苗等 */
     --color-mario-blue: #9BB1FF;
     /* 特殊打底色：偏紫的浅蓝色，游戏感强 */
@@ -26,11 +28,13 @@
     /* 主标题、强调文字：深灰蓝，避免纯黑造成的对比刺眼 */
     --text-secondary: #9A8C98;
     /* 次要文字：偏紫的浅灰 */
+    --text-third: #ece2eb;
+    /* 次要文字：偏亮的浅灰 */
 
     /* 边框和阴影 */
-    --border-radius-sm: 12px;
-    --border-radius-md: 20px;
-    --border-radius-lg: 32px;
+    --border-radius-sm: 1px;
+    --border-radius-md: 15px;
+    --border-radius-lg: 20px;
     /* Q弹的超软阴影 */
     --shadow-soft: 0 10px 30px rgba(74, 78, 105, 0.05);
     /* 模拟实体厚度的内阴影/底部阴影 */
@@ -64,7 +68,7 @@ body {
     width: 100%;
     max-width: 1200px;
     height: 90vh;
-    background-color: var(--bg-main);
+    background: linear-gradient(180deg, #F3E0D6 0%, #B1877ACC 100%);
     border-radius: var(--border-radius-lg);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
     /* 外层大框的克制阴影 */
@@ -75,11 +79,13 @@ body {
 /* ===== 侧边栏样式 ===== */
 .sidebar {
     width: 280px;
-    background-color: var(--bg-sidebar);
+    background: linear-gradient(180deg, #F3E0D6 0%, #B1877A 100%);
+    /* 侧边栏整体由浅向深渐变 */
     padding: 32px 24px;
     display: flex;
     flex-direction: column;
-    border-right: 2px dashed rgba(212, 163, 115, 0.3);
+    border-right: 2px dashed rgba(139, 106, 112, 0.3);
+    /* 调整分割线颜色适配浆果色 */
     /* 使用原木色虚线作为分割，增加手账感 */
 }
 
@@ -93,26 +99,35 @@ body {
     gap: 12px;
     margin-bottom: 40px;
     padding: 12px;
-    background: #e2c9a7;
-    border: 3px solid #8b6f4c;
+    background: #F3E0D6;
+    /* 统一为暖粉白色 */
+    border: 3px solid #B1877A;
+    /* 修正边框厚度并匹配色系 */
     border-radius: 12px;
-    box-shadow: 0 4px 0 #5d3f2a;
+    box-shadow: 0 4px 0 #8E6B61;
     cursor: pointer;
     transition: transform 0.1s, box-shadow 0.1s;
 }
 
+.user-brand:hover {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8E6B61;
+}
+
 .user-brand:active {
     transform: translateY(4px);
-    box-shadow: 0 0 0 #5d3f2a;
+    box-shadow: 0 0 0 #8B6A70;
 }
 
 .brand-avatar {
     font-size: 28px;
-    background: #f4e8d3;
+    background: #F0D9CC;
+    /* 匹配标题栏背景色 */
     width: 44px;
     height: 44px;
     border-radius: 8px;
-    border: 2px solid #b28b5c;
+    border: 2px solid #C29A8A;
+    /* 匹配标题栏边框 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -126,14 +141,15 @@ body {
 .brand-info h1 {
     font-size: 16px;
     font-weight: 900;
-    color: #2d3e1f;
+    color: #5D3A42;
+    /* 在浅色地板上使用深莓色 */
     margin: 0 0 2px 0;
     text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .brand-sub {
     font-size: 11px;
-    color: #5c4328;
+    color: #8B6A70;
     font-weight: 700;
 }
 
@@ -163,53 +179,44 @@ body {
     text-align: left;
 }
 
-/* 导航项悬停时的 Q弹效果 */
+/* 导航项悬停时的下压反馈 */
 .nav-item:hover {
     background-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-2px);
+    transform: translateY(2px);
+    /* 改为下压 */
 }
 
 /* 激活状态的导航项 */
 .nav-item.active {
-    background-color: var(--bg-surface);
-    color: var(--color-primary);
-    box-shadow: var(--shadow-soft);
+    background-color: #F3E0D6;
+    /* 暖粉白激活背景 */
+    color: #D44F6A;
+    /* 莓红色激活文字 */
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05);
 }
 
 .nav-item .icon {
     font-size: 20px;
 }
 
-/* 底部用户信息 */
+/* 底部用户信息（仅保留连续天数文字） */
 .user-profile {
     display: flex;
     align-items: center;
-    gap: 16px;
-    background: var(--bg-surface);
-    padding: 16px;
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-soft);
-}
-
-.avatar-placeholder {
-    width: 44px;
-    height: 44px;
-    background-color: var(--color-mario-blue);
-    border-radius: 50%;
-    /* 假装有个头像图片 */
-    background-image: linear-gradient(135deg, var(--color-mario-blue), #E2E8FF);
-}
-
-.user-name {
-    font-weight: 700;
-    font-size: 15px;
+    justify-content: center;
+    background: transparent;
+    padding: 12px 16px;
+    border: none;
+    box-shadow: none;
+    margin-top: auto;
 }
 
 .user-streak {
-    font-size: 13px;
-    color: var(--color-accent);
+    font-size: 14px;
+    color: #FCE6DA;
+    /* 使用暖粉亮色文字，确保在深色渐变底色上清晰 */
     font-weight: 800;
-    margin-top: 4px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* ===== 主内容区域 ===== */
@@ -285,17 +292,7 @@ body {
     line-height: 1.6;
 }
 
-.progress-placeholder {
-    height: 180px;
-    background-color: #E6F3EB;
-    /* 淡淡的绿色底色 */
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
 
-.timeline-placeholder {
-    height: 600px;
-}
 
 /* --- 每日任务列表 --- */
 .quests-section h3 {
@@ -312,25 +309,30 @@ body {
 
 /* 带有实体厚度的游戏卡片 */
 .quest-card {
-    background-color: var(--bg-surface);
+    background-color: #F3E0D6;
+    /* 统一卡片背景，与网页背景色 #8B6A70 区分 */
     border-radius: var(--border-radius-md);
     padding: 20px 24px;
     display: flex;
     align-items: center;
     gap: 20px;
-    box-shadow: var(--shadow-solid);
+    box-shadow: 0 6px 0 #B1877A, 0 12px 20px rgba(0, 0, 0, 0.1);
+    /* 强化投影增加立体感与区分度 */
     /* 实体厚度 */
-    border: 2px solid transparent;
+    border: 3px solid #B1877A;
+    /* 强化边框 */
     /* 边框占位 */
     transition: var(--transition-bouncy);
     cursor: pointer;
+    position: relative;
+    top: 0;
 }
 
 .quest-card:hover {
-    transform: translateY(-4px);
-    /* 悬浮顶起 */
-    box-shadow: 0 8px 0 rgba(74, 78, 105, 0.1);
-    /* 加厚投影 */
+    transform: translateY(2px);
+    /* 改为下压反馈 */
+    box-shadow: 0 4px 0 #B1877A, 0 8px 12px rgba(0, 0, 0, 0.1);
+    /* 阴影变薄 */
 }
 
 /* 完成状态被选中压下 */
@@ -482,24 +484,14 @@ body {
     color: var(--color-primary);
 }
 
-.icon-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 12px;
-}
 
-.icon-btn:hover {
-    color: var(--color-primary);
-}
 
 /* 右侧热量环 */
 .daily-calorie-ring {
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: conic-gradient(var(--color-primary) 70%, #E6F3EB 0);
+    background: var(--color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -511,7 +503,6 @@ body {
 .ring-circle {
     width: 100%;
     height: 100%;
-    background: var(--bg-main);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -532,7 +523,7 @@ body {
 
 .ring-label {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 /* --- 切换容器 --- */
@@ -550,9 +541,45 @@ body {
 }
 
 /* --- 日视图：垂直时间轴 --- */
-.journal-timeline {
-    position: relative;
-    padding-left: 20px;
+.journal-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: #A58E8E;
+    opacity: 0.8;
+}
+
+.placeholder-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    filter: grayscale(0.5);
+}
+
+.journal-placeholder p {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* 动态条目样式扩展 */
+.timeline-item.entry-ingestion .dot {
+    background-color: #F28482;
+    /* 摄入点：粉红色 */
+    box-shadow: 0 0 0 4px rgba(242, 132, 130, 0.2);
+}
+
+.timeline-item.entry-exercise .dot {
+    background-color: #8FBB95;
+    /* 消耗点：绿色 */
+    box-shadow: 0 0 0 4px rgba(143, 187, 149, 0.2);
+}
+
+.timeline-item.entry-exercise .timeline-content {
+    background: #e5f7e8d6;
+    border-left: 4px solid #8FBB95;
+    border-radius: 4px 12px 12px 4px;
 }
 
 .journal-timeline::before {
@@ -563,7 +590,7 @@ body {
     left: 80px;
     /* 控制线的位置 */
     width: 2px;
-    background-color: rgba(212, 163, 115, 0.2);
+    background-color: #ffffff33;
     /* 原木色虚线感 */
 }
 
@@ -578,7 +605,7 @@ body {
     width: 60px;
     text-align: right;
     font-weight: 700;
-    color: var(--text-secondary);
+    color: var(--text-third);
     font-size: 14px;
     position: relative;
     padding-top: 16px;
@@ -597,9 +624,7 @@ body {
     z-index: 2;
 }
 
-.sport-dot {
-    background-color: var(--color-primary);
-}
+
 
 .timeline-content {
     flex: 1;
@@ -617,21 +642,7 @@ body {
     box-shadow: var(--shadow-solid);
 }
 
-.meal-photo-placeholder {
-    width: 100px;
-    height: 100px;
-    background-color: #FFF3E0;
-    /* 淡淡的暖黄 */
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-}
 
-.lunch-bg {
-    background-color: #E8F5E9;
-}
 
 .meal-info {
     flex: 1;
@@ -661,27 +672,7 @@ body {
 }
 
 /* 运动卡片有点不同 */
-.sport-card {
-    align-items: center;
-    background-color: #F8FDF9;
-    border: 1px dashed var(--color-primary);
-}
 
-.sport-icon {
-    width: 60px;
-    height: 60px;
-    background-color: #E6F3EB;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-}
-
-.sport-duration {
-    font-weight: 700;
-    color: var(--color-primary) !important;
-}
 
 /* --- 月视图：日历 --- */
 .calendar-grid {
@@ -736,7 +727,8 @@ body {
     bottom: 8px;
     width: 6px;
     height: 6px;
-    background-color: var(--color-primary);
+    background-color: #D1D5DB;
+    /* 默认点改为中性色 */
     border-radius: 50%;
 }
 
@@ -768,7 +760,8 @@ body {
 .view-tab:hover {
     border-color: var(--color-primary);
     color: var(--color-primary);
-    transform: translateY(-2px);
+    transform: translateY(2px);
+    /* 下压反馈 */
 }
 
 .view-tab.active {
@@ -792,7 +785,7 @@ body {
 
 .nav-arrow:hover {
     opacity: 1;
-    color: var(--color-primary);
+    color: var(--color-accent);
 }
 
 .tab-icon {
@@ -841,7 +834,7 @@ body {
 }
 
 .picker-current-view:hover {
-    color: var(--color-primary);
+    color: var(--color-accent);
 }
 
 .picker-nav-btn {
@@ -859,8 +852,8 @@ body {
 }
 
 .picker-nav-btn:hover {
-    background: #F8F9FA;
-    color: var(--color-primary);
+    background: #FFEDEA;
+    color: var(--color-accent);
 }
 
 .picker-weekdays {
@@ -893,14 +886,14 @@ body {
 }
 
 .picker-cell:hover {
-    background: #E8F5E9;
-    color: var(--color-primary);
+    background: #FFEDEA;
+    color: var(--color-accent);
 }
 
 .picker-cell.selected {
-    background: var(--color-primary);
+    background: var(--color-accent);
     color: white;
-    box-shadow: 0 2px 8px rgba(163, 201, 168, 0.4);
+    box-shadow: 0 2px 8px rgba(242, 132, 130, 0.4);
 }
 
 .picker-cell.not-current-month {
@@ -926,71 +919,17 @@ body {
 }
 
 .picker-month-cell:hover {
-    background: #E8F5E9;
-    color: var(--color-primary);
+    background: #FFEDEA;
+    color: var(--color-accent);
 }
 
 .picker-month-cell.selected {
-    background: var(--color-primary);
+    background: var(--color-accent);
     color: white;
 }
 
 /* ===== 左上角用户大徽标 (原 Logo 处) ===== */
-.user-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 48px;
-    padding: 12px;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    transition: var(--transition-bouncy);
-    background: transparent;
-    border: 1px solid transparent;
-}
 
-.user-brand:hover {
-    background: var(--bg-surface);
-    border-color: #E2E8F0;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-soft);
-}
-
-.brand-avatar {
-    width: 48px;
-    height: 48px;
-    background: var(--bg-surface);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    box-shadow: 0 4px 12px rgba(163, 201, 168, 0.2);
-    border: 2px solid var(--color-primary);
-}
-
-.brand-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.brand-info h1 {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 2px;
-}
-
-.brand-sub {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 600;
-}
-
-/* 隐藏底部旧的 user-profile 区域 (如果需要的话，也可以双入口保留，但根据需求，大入口移到了顶部) */
-.user-profile {
-    display: none;
-}
 
 /* ===== 个人资料设置弹窗 ===== */
 .modal-overlay {
@@ -1016,7 +955,7 @@ body {
 }
 
 .profile-settings-modal {
-    background: var(--bg-surface);
+    background: #ffffff;
     width: 440px;
     border-radius: var(--border-radius-lg);
     box-shadow: 0 24px 48px rgba(74, 78, 105, 0.15);
@@ -1084,7 +1023,6 @@ body {
     width: 80px;
     height: 80px;
     background: #E8F5E9;
-    border: 3px solid var(--color-primary);
     border-radius: 24px;
     display: flex;
     align-items: center;
@@ -1102,7 +1040,7 @@ body {
 }
 
 .edit-avatar-btn:hover {
-    text-decoration: underline;
+    color: #b493b5;
 }
 
 .settings-name-edit {
@@ -1135,8 +1073,7 @@ body {
 
 .styled-input:focus {
     border-color: var(--color-primary);
-    background: var(--bg-surface);
-    box-shadow: 0 0 0 4px rgba(163, 201, 168, 0.2);
+    box-shadow: 0 0 0 1px rgba(163, 201, 168, 0.2);
 }
 
 .settings-data-section h4 {
@@ -1210,7 +1147,6 @@ body {
 }
 
 .btn-fold-panel:hover {
-    background: #E8F5E9;
     color: var(--color-primary);
     border-color: var(--color-primary);
 }
@@ -1239,17 +1175,7 @@ body {
 }
 
 /* ===== 预设头像选择库 ===== */
-.avatar-picker-panel {
-    background: var(--bg-surface);
-    border: 1px solid #E2E8F0;
-    border-radius: var(--border-radius-md);
-    padding: 16px;
-    margin-top: -16px;
-    margin-bottom: 24px;
-    max-height: 480px;
-    overflow-y: auto;
-    animation: fadeInDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+
 
 @keyframes fadeInDown {
     from {
@@ -1321,44 +1247,7 @@ body {
 }
 
 /* ===== 身体围度展开面板 ===== */
-.settings-measurements-section {
-    margin-top: 24px;
-    border-top: 1px dashed rgba(212, 163, 115, 0.3);
-    padding-top: 24px;
-}
 
-.measurements-header {
-    display: flex;
-    justify-content: space-between;
-    cursor: pointer;
-    align-items: center;
-}
-
-.measurements-header h4 {
-    font-size: 16px;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.expand-icon {
-    font-size: 12px;
-    color: var(--text-secondary);
-    transition: transform 0.3s;
-}
-
-.measurements-body {
-    margin-top: 16px;
-    overflow: hidden;
-    animation: fadeInDown 0.3s;
-}
-
-.measurements-body.hidden {
-    display: none;
-}
-
-.measurements-header.expanded .expand-icon {
-    transform: rotate(180deg);
-}
 
 /* 简易 CSS 小人模型容器 */
 .human-figure-container {
@@ -1517,7 +1406,7 @@ body {
 /* 悬浮输入气泡 */
 .measure-input-popover {
     position: absolute;
-    background: var(--bg-surface);
+    background: #ffffff;
     border-radius: 12px;
     box-shadow: var(--shadow-soft);
     padding: 12px;
@@ -1539,7 +1428,7 @@ body {
 .measure-input-popover label {
     font-size: 13px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
     text-align: center;
 }
 
@@ -1913,7 +1802,7 @@ body {
     width: 100%;
     margin-top: 24px;
     padding: 16px;
-    background: #E8F5E9;
+    background: #ffffff;
     border: 1px dashed var(--color-primary);
     border-radius: 12px;
     display: flex;
@@ -1926,7 +1815,7 @@ body {
 }
 
 .btn-expand-measurements:hover {
-    background: #C8E6C9;
+    border-style: solid;
     transform: translateY(-1px);
 }
 
@@ -1936,13 +1825,19 @@ body {
 
 /* 2. 核心游戏化路线区 (星露谷生存体力条) */
 .survival-game-card {
-    background-color: #f2e1c0;
-    background-image: radial-gradient(circle at 10px 10px, #d9b382 1px, transparent 1px),
-        linear-gradient(45deg, #ecd8b4 20%, #f5e7ce 80%);
+    background-color: #F3E0D6;
+    /* 暖粉白基底 */
+    background-image:
+        radial-gradient(circle at 10px 10px, #E3B8A5 1px, transparent 1px),
+        /* 面板装饰点 */
+        linear-gradient(45deg, #F5D5C4 20%, #FCE6DA 80%);
+    /* 面板渐变 */
     background-size: 20px 20px, 100%;
-    border: 4px solid #8b6f4c;
-    border-radius: var(--border-radius-lg);
-    box-shadow: 0 8px 0 #5d3f2a, 0 16px 16px rgba(0, 0, 0, 0.1);
+    border: 4px solid #B1877A;
+    /* 面板边框 */
+    border-radius: 15px;
+    box-shadow: 0 8px 0 #8E6B61, 0 16px 16px rgba(0, 0, 0, 0.1);
+    /* 面板外阴影 */
     padding: 24px 20px 16px 20px;
     margin-bottom: 32px;
     position: relative;
@@ -1953,12 +1848,15 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #e2c9a7;
-    border: 3px solid #b28b5c;
-    border-radius: 30px;
+    background: #F0D9CC;
+    /* 标题栏背景 */
+    border: 3px solid #C29A8A;
+    /* 标题栏边框 */
+    border-radius: 20px;
     padding: 8px 16px;
-    margin-bottom: 24px;
-    box-shadow: inset 0 -3px 0 #9c7a4f, 0 4px 0 #7b5e3b;
+    margin-bottom: 20px;
+    box-shadow: inset 0 -3px 0 #B58272, 0 4px 0 #8F6659;
+    /* 内阴影与外阴影 */
 }
 
 .game-title-group {
@@ -1969,25 +1867,32 @@ body {
 
 .game-title-icon {
     font-size: 20px;
-    filter: drop-shadow(2px 2px 0 #6b4e2e);
+    filter: drop-shadow(2px 2px 0 #A76E5F);
+    /* 图标阴影 */
 }
 
 .game-title-text {
     font-size: 13px;
     font-weight: 800;
-    color: #2d3e1f;
-    text-shadow: 1px 1px 0 #c9a96b;
+    color: #643A46;
+    /* 标题文字：深莓色 */
+    text-shadow: 1px 1px 0 #E3B7A5;
+    /* 文字阴影：浅粉 */
 }
 
 .game-kcal-counter {
-    background: #2c3a1f;
+    background: #644B55;
+    /* 计数器背景：深紫灰 */
     padding: 6px 12px;
     border-radius: 20px;
-    color: #ffe484;
+    color: #FAD6C0;
+    /* 计数器文字：暖粉白 */
     font-size: 13px;
     font-weight: 800;
-    border: 2px solid #7faa60;
-    box-shadow: inset 0 -2px 0 #1e2a15;
+    border: 2px solid #B6867A;
+    /* 计数器边框：粉棕 */
+    box-shadow: inset 0 -2px 0 #452F38;
+    /* 计数器内阴影 */
     font-family: monospace;
 }
 
@@ -2001,38 +1906,71 @@ body {
 
 .grass {
     width: 12px;
-    height: 20px;
-    background: repeating-linear-gradient(45deg, #A3C9A8 0px, #A3C9A8 4px, #84A59D 4px, #84A59D 8px);
+    height: 18px;
+    background: repeating-linear-gradient(45deg, #72a474 0px, #65926e 4px, #72a474 4px, #65926e 8px);
+    /* 草叶亮部与暗部 */
     border-radius: 30% 30% 0 0;
-    transform: rotate(2deg);
-    box-shadow: 0 4px 0 #5c7a68;
+    box-shadow: 0 4px 0 #4c6e53;
+    /* 草叶投影 */
     position: relative;
     top: 8px;
+    transition: transform 0.3s ease;
 }
 
-.grass:nth-child(even) {
-    transform: rotate(-3deg);
+/* 通过 nth-child 模拟随机高度和摆动角度 */
+.grass:nth-child(1) {
+    height: 16px;
+    transform: rotate(-5deg);
+    margin-top: 4px;
+}
+
+.grass:nth-child(2) {
     height: 24px;
+    transform: rotate(3deg);
+    margin-top: -2px;
+}
+
+.grass:nth-child(3) {
+    height: 20px;
+    transform: rotate(-2deg);
+    margin-top: 2px;
+}
+
+.grass:nth-child(4) {
+    height: 26px;
+    transform: rotate(5deg);
+    margin-top: -4px;
+}
+
+.grass:nth-child(5) {
+    height: 14px;
+    transform: rotate(-8deg);
+    margin-top: 6px;
 }
 
 /* 轨道区域 */
 .track-wrapper {
     position: relative;
     margin: 16px 0 24px;
-    background: #dbbc87;
-    border-radius: 40px;
-    padding: 8px 8px 12px 8px;
-    border: 4px solid #aa7e53;
-    box-shadow: inset 0 -4px 0 #836e48, 0 6px 0 #61482d;
+    background: #E3C9BB;
+    /* 轨道容器背景：浅粉 */
+    border-radius: 30px;
+    padding: 58px 30px 22px 30px;
+    border: 4px solid #B1877A;
+    /* 轨道容器边框 */
+    box-shadow: inset 0 -4px 0 #A47061, 0 6px 0 #765349;
+    /* 轨道容器阴影 */
 }
 
 .survival-track {
     position: relative;
-    height: 44px;
-    background: #E8D5B5;
+    height: 20px;
+    background: #F3E0D6;
+    /* 正常轨道背景 */
     border-radius: 22px;
-    box-shadow: inset 0 0 0 2px #fcf2de, 0 4px 0 #7b5d3a;
-    border: 3px solid #7C5432;
+    box-shadow: inset 0 0 0 2px #FCE6DA, 0 4px 0 #8E6B61;
+    border: 3px solid #B1877A;
+    /* 正常轨道边带 */
 }
 
 /* 轨道刻度 */
@@ -2043,62 +1981,71 @@ body {
     right: 0;
     bottom: 0;
     display: flex;
-    justify-content: space-between;
-    padding: 0 10%;
+    justify-content: flex-start;
     align-items: center;
     pointer-events: none;
-    z-index: 1;
+    z-index: 6;
+    /* 必须高于 survival-fill (z-index: 2) */
 }
 
 .track-marks div {
-    width: 4px;
-    height: 16px;
-    background: #A77B50;
-    border-radius: 2px;
-    margin-top: 14px;
+    position: absolute;
+    width: 2px;
+    height: 14px;
+    /* 增加高度，使其跨越 10px 的 fill */
+    background: #5D3A42;
+    /* 使用深色，确保在浅色进度条上清晰 */
+    border-radius: 1px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.6;
 }
 
 /* 动态填充条 */
 .survival-fill {
     position: absolute;
     right: 0;
-    /* 从右侧开始减少 */
     top: 2px;
     bottom: 0;
-    height: 34px;
-    background: #6B8E23;
+    height: 10px;
+    background: #B98B99;
+    /* 正常填充：豆沙粉 */
     border-radius: 17px;
     transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s;
     z-index: 2;
 }
 
 .survival-fill.warning {
-    background: #FF8C00;
-    animation: pulseWarning 1s infinite alternate;
+    background: #F3B58C;
+    /* 警告：蜜桃色 */
+    animation: pulseWarning 0.4s infinite alternate;
 }
 
 .survival-fill.depleted {
-    background: #696969;
+    background: #8F7A82;
+    /* 耗尽：灰紫 */
 }
 
 .survival-fill.gameover {
-    background: #4A2C2C;
+    background: #6D3F54;
+    /* 超额：深莓色 */
 }
 
 @keyframes pulseWarning {
     from {
-        background: #FF8C00;
+        background: #F3B58C;
+        /* 蜜桃 ↔ 莓红交替 */
     }
 
     to {
-        background: #FF4500;
+        background: #D44F6A;
     }
 }
 
 /* 小人化身 */
 .survival-avatar {
     position: absolute;
-    top: -24px;
+    top: -50px;
     width: 40px;
     height: 50px;
     /* 右对齐，由 JS 通过 right 属性来控制距右边距百分比，加上负 margin 使其居中 */
@@ -2122,7 +2069,8 @@ body {
     left: 4px;
     width: 16px;
     height: 8px;
-    background: #D2691E;
+    background: #C98B6B;
+    /* 暖棕色 */
 }
 
 .sv-avatar-hat .hat-brim {
@@ -2131,7 +2079,8 @@ body {
     left: 0;
     width: 24px;
     height: 6px;
-    background: #8B4513;
+    background: #A55728;
+    /* 深棕 */
 }
 
 .sv-avatar-head {
@@ -2140,13 +2089,19 @@ body {
     left: 10px;
     width: 20px;
     height: 20px;
-    background: #F5DEB3;
+    background: #F8D5B0;
+    /* 肤色：暖白 */
     z-index: 2;
 }
 
-.survival-avatar.depleted .sv-avatar-head,
+.survival-avatar.depleted .sv-avatar-head {
+    background: #A6939A;
+    /* 耗尽时的肤色：灰紫 */
+}
+
 .survival-avatar.gameover .sv-avatar-head {
-    background: #AAAAAA;
+    background: #5A3F49;
+    /* GameOver时的肤色：暗紫 */
 }
 
 .sv-eye {
@@ -2179,13 +2134,22 @@ body {
     left: 8px;
     width: 24px;
     height: 18px;
-    background: #3E721D;
+    background: #9F6D78;
+    /* 衣服：豆沙粉 */
     z-index: 1;
     border-radius: 4px 4px 0 0;
+    box-shadow: inset 0 6px 0 #B58272;
+    /* 背带颜色 */
 }
 
 .survival-avatar.depleted .sv-avatar-body {
-    background: #7A7A7A;
+    background: #A6939A;
+    /* 耗尽态衣服色：灰紫 */
+}
+
+.survival-avatar.gameover .sv-avatar-body {
+    background: #5A3F49;
+    /* GameOver衣服色：暗紫 */
 }
 
 .sv-pants {
@@ -2203,7 +2167,8 @@ body {
     right: -4px;
     width: 4px;
     height: 8px;
-    background: #FF6347;
+    background: #7fb7df;
+    /* 警告汗滴色 */
     border-radius: 2px;
     animation: sweatDrop 0.5s infinite alternate;
 }
@@ -2221,11 +2186,11 @@ body {
 /* 飘字 */
 .float-text-container {
     position: absolute;
-    top: -40px;
-    left: 0;
-    right: 0;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
     pointer-events: none;
-    z-index: 20;
+    z-index: 100;
 }
 
 .float-text {
@@ -2236,9 +2201,11 @@ body {
     white-space: nowrap;
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5), 0 0 2px black;
     color: white;
+    /* 默认白 */
     animation: float-up 1s ease-out forwards;
     pointer-events: none;
 }
+
 
 @keyframes float-up {
     0% {
@@ -2266,20 +2233,26 @@ body {
 }
 
 .stat-card {
-    background: #e2c9a7;
-    border: 3px solid #8b6f4c;
+    background: #F3E0D6;
+    /* 卡片背景：暖粉白 */
+    border: 3px solid #B1877A;
+    /* 边框：红棕 */
     border-radius: 12px;
     padding: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 5px 0 #5d3f2a;
+    box-shadow: 0 5px 0 #8E6B61;
+    /* 卡片阴影 */
     transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+    top: 0;
 }
 
 .stat-card:hover {
     transform: translateY(2px);
-    box-shadow: 0 3px 0 #5d3f2a;
+    /* 改为下压 */
+    box-shadow: 0 3px 0 #8E6B61;
 }
 
 .stat-card.full-width {
@@ -2290,9 +2263,10 @@ body {
     font-size: 32px;
     width: 60px;
     height: 60px;
-    background: #f4e8d3;
+    background: #F0D9CC;
+    /* 图标背景 */
     border-radius: 8px;
-    border: 2px solid #b28b5c;
+    border: 2px solid #C29A8A;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2356,83 +2330,89 @@ body {
     border-radius: 4px;
 }
 
-/* 4. 快捷动作触发区 (星露谷游戏厚实体按钮) */
-.quick-actions {
+/* 4. 快捷动作触发区 (原木风水平按钮) */
+.wood-actions {
     display: flex;
-    gap: 16px;
+    gap: 50px;
+    justify-content: space-between;
     margin-top: 24px;
 }
 
-.btn-action {
+.pixel-btn {
     flex: 1;
-    background: #e2c9a7;
-    border: 3px solid #8b6f4c;
-    border-radius: 12px;
-    padding: 16px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 4px;
+    background: #F3D5B5;
+    /* 按钮背景：浆果黄昏暖木色 */
+    border: 2px solid #C29A7A;
+    /* 按钮外框边线 */
+    border-radius: 15px;
+    padding: 10px 8px;
+    color: #5D3A42;
+    /* 按钮文字：深莓色 */
+    font-weight: 800;
+    font-size: 12px;
+    text-shadow: 1px 1px 0 #FFE2D1;
+    /* 文字高光 */
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.2),
+        0 4px 0 #9C6F5F;
+    /* 按钮外部立体阴影 */
+    transition: all 0.1s ease;
     cursor: pointer;
-    box-shadow: 0 5px 0 #5d3f2a;
-    transition: transform 0.1s, box-shadow 0.1s;
-    outline: none;
+    position: relative;
+    top: 0;
 }
 
-.btn-action:active {
-    transform: translateY(5px);
-    box-shadow: 0 0 0 #5d3f2a;
+.pixel-btn:hover {
+    top: 2px;
+    /* 悬停时轻微下压 */
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.2),
+        0 2px 0 #9C6F5F;
+    /* 阴影变薄 */
 }
 
-/* 专项颜色定制：记饮食（主要动作）-> 复古红 */
-#action-eat {
-    background: #d87070;
+.pixel-btn:active {
+    top: 4px;
+    box-shadow:
+        inset 4px 4px 6px rgba(0, 0, 0, 0.4),
+        0 0 0 #9C6F5F;
+    padding: 12px 6px 8px 10px;
 }
 
-#action-eat .action-text {
-    color: #4a1c1c;
-    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+/* 按钮专项色值覆盖计划 (基于表格) */
+.btn-action-eat {
+    background: #F3D5B5;
 }
 
-/* 专项颜色定制：吃大餐 -> 复古橙黑 */
-#action-eat-big {
-    background: #dbbc87;
+/* 普通饮食按钮 */
+.btn-action-exercise {
+    background: #E8B4A2;
+    border-color: #B0584A;
+    color: #4F2E32;
 }
 
-#action-eat-big .action-text {
-    color: #4a3320;
-    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+/* 运动按钮：带警告意味的红粉 */
+.btn-action-reset {
+    background: #c8b4d2fb;
+    border-color: #7a5d89;
+    color: #2F2A1F;
 }
 
-/* 专项颜色定制：记运动 -> 复古绿 */
-#action-exercise {
-    background: #8FCE7F;
-}
+/* 重置按钮：深原木色 */
 
-#action-exercise .action-text {
-    color: #1e3b1e;
-    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
-}
 
-/* 专项颜色定制：重置次日 -> 蓝灰底色 */
-#action-reset {
-    background: #8ab6d6 !important;
-    /* Override inline style if any */
-}
-
-#action-reset .action-text {
-    color: #1e3b52;
-    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.action-icon {
-    font-size: 28px;
-    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.15));
-}
-
-.action-text {
-    font-weight: 900;
-    color: #2d3a1a;
+.pixel-btn .action-icon {
     font-size: 14px;
-    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4);
+    /* icon也随之改小 */
+    filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.2));
+}
+
+.pixel-btn .action-text {
+    white-space: nowrap;
 }
