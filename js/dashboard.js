@@ -38,6 +38,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const journalPlaceholder = document.getElementById('journalPlaceholder');
     const journalRingNum = document.getElementById('journalRingNum');
 
+    // 记录弹窗 DOM 引用
+    const modalIntake = document.getElementById('modal-log-intake');
+    const modalExercise = document.getElementById('modal-log-exercise');
+    const btnCloseIntake = document.getElementById('close-log-intake');
+    const btnCloseExercise = document.getElementById('close-log-exercise');
+
+    // 弹窗底部操作按钮
+    const btnCancelIntake = document.getElementById('cancel-log-intake');
+    const btnConfirmIntake = document.getElementById('confirm-log-intake');
+    const btnCancelExercise = document.getElementById('cancel-log-exercise');
+    const btnConfirmExercise = document.getElementById('confirm-log-exercise');
+
+    // 摄入弹窗交互元素
+    const mealBtns = document.querySelectorAll('.meal-btn');
+    const intakeTotalVal = document.getElementById('intake-total-val');
+    const inputFoodName = document.getElementById('input-food-name');
+    const inputFoodWeight = document.getElementById('input-food-weight');
+    const unitOptions = document.querySelectorAll('.unit-option');
+    const displayUnitLabel = document.getElementById('display-unit-label');
+    const valCarbs = document.getElementById('val-carbs');
+    const valFat = document.getElementById('val-fat');
+    const valProtein = document.getElementById('val-protein');
+    const barFillCarbs = document.getElementById('bar-fill-carbs');
+    const barFillFat = document.getElementById('bar-fill-fat');
+    const barFillProtein = document.getElementById('bar-fill-protein');
+
+    // 消耗弹窗交互元素
+    const exerciseCards = document.querySelectorAll('.exercise-card');
+    const customExGroup = document.getElementById('custom-exercise-group');
+    const inputExName = document.getElementById('input-exercise-name');
+    const stepperMinus = document.getElementById('stepper-minus');
+    const stepperPlus = document.getElementById('stepper-plus');
+    const stepperVal = document.getElementById('stepper-val');
+    const intensityBtns = document.querySelectorAll('.intensity-btn');
+    const moodEmojis = document.querySelectorAll('.mood-emoji');
+    const burnTotalVal = document.getElementById('burn-total-val');
+
     const QUOTES = [
         { min: 1000, text: "哇哦！这种缺口简直是燃脂大师！" },
         { min: 500, text: "干得漂亮！又打败了一大波脂肪怪！" },
@@ -89,20 +126,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="dot"></span>
                 </div>
                 <div class="timeline-content">
+                    <div class="timeline-icon-box">
+                        ${entry.icon}
+                    </div>
                     <div class="meal-info">
-                        <h4>${entry.title} <span class="meal-cal">(${entry.amount} kcal)</span></h4>
-                        <p>${entry.note}</p>
+                        <div class="timeline-title-row">
+                            <span class="timeline-title">${entry.title}</span>
+                            <span class="timeline-cal">${entry.type === 'ingestion' ? '+' : '-'}${entry.amount} kcal</span>
+                        </div>
+                        <p class="timeline-desc">${entry.note}</p>
                     </div>
                 </div>
             `;
-            journalTimeline.appendChild(item);
+            journalTimeline.prepend(item);
         });
     }
 
     /**
      * 添加手帐记录
      */
-    function addJournalEntry(type, amount, title, note) {
+    function addJournalEntry(type, amount, title, note, icon) {
         const now = new Date();
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -111,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             amount,
             title,
             note,
+            icon,
             time: timeStr
         });
 
@@ -245,25 +289,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------- 按钮逻辑 ----------
 
     // 记录摄入 (饮食) -> 减少剩余量 (通过增加 caloriesConsumed 实现)
-    function handleIngestion(amount) {
+    function handleIngestion(amount, foodName, icon) {
         if (status === 'gameover') return;
         caloriesConsumed += amount;
         createFloatText(`+${amount} kcal`, false); // 红色飘字代表摄入加重
 
-        // 联动手帐
-        addJournalEntry('ingestion', amount, '记录饮食', '今日补充了能量，继续前进！');
+        // 评价逻辑
+        let evalText = "✅ 回复状态，健康生活每一天！";
+        if (amount > 500) evalText = "🔥 丰盛的一餐，热量偏高记得适量加练哦~";
+        else if (amount < 150) evalText = "🍃 算是比较轻薄的健康加餐~";
 
+        addJournalEntry('ingestion', amount, foodName || '记录饮食', evalText, icon || '🍽️');
         updateView();
     }
 
     // 记录消耗 (运动) -> 增加总容量 (动态扩展进度条)
-    function handleExercise(amount) {
+    function handleExercise(amount, exName, icon, unitStr) {
         bonusCapacity += amount;
         createFloatText(`+${amount} 容量`, true); // 绿色飘字
 
-        // 联动手帐
-        addJournalEntry('exercise', amount, '运动消耗', '开启了旅程中的运动挑战，增加了生命上限！');
+        const bowls = (amount / 200).toFixed(1);
+        const evalText = `今日${unitStr || '锻炼了一会儿'}，相当于消耗了 🍚 ${bowls} 碗米饭`;
 
+        addJournalEntry('exercise', amount, exName || '运动消耗', evalText, icon || '🏃');
         updateView();
     }
 
@@ -276,11 +324,433 @@ document.addEventListener('DOMContentLoaded', () => {
         createFloatText('🌞 新的一天', true);
     }
 
-    if (btnEat) btnEat.addEventListener('click', () => { console.log('Eat clicked'); handleIngestion(200); });
-    if (btnEatBig) btnEatBig.addEventListener('click', () => { console.log('EatBig clicked'); handleIngestion(500); });
-    if (btnExercise) btnExercise.addEventListener('click', () => { console.log('Exercise clicked'); handleExercise(180); });
-    if (btnReset) btnReset.addEventListener('click', () => { console.log('Reset clicked'); resetDay(); });
+    // --- 弹窗触发逻辑 ---
+    if (btnEatBig) btnEatBig.addEventListener('click', () => {
+        modalIntake.classList.remove('hidden');
+    });
 
+    if (btnExercise) btnExercise.addEventListener('click', () => {
+        modalExercise.classList.remove('hidden');
+    });
+
+    // --- 弹窗关闭逻辑 ---
+    const closeIntakeFunc = () => modalIntake.classList.add('hidden');
+    const closeExerciseFunc = () => modalExercise.classList.add('hidden');
+
+    if (btnCloseIntake) btnCloseIntake.addEventListener('click', closeIntakeFunc);
+    if (btnCancelIntake) btnCancelIntake.addEventListener('click', closeIntakeFunc);
+
+    if (btnCloseExercise) btnCloseExercise.addEventListener('click', closeExerciseFunc);
+    if (btnCancelExercise) btnCancelExercise.addEventListener('click', closeExerciseFunc);
+
+    // --- 弹窗点击外部关闭 ---
+    [modalIntake, modalExercise].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        }
+    });
+
+    // ==========================================
+    // 摄入弹窗交互逻辑
+    // ==========================================
+    mealBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            mealBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    // 摄入单位切换 (新版自定义下拉框)
+    let currentIntakeUnit = 'g'; // 默认单位
+    const intakeUnitSelect = document.getElementById('intake-unit-select');
+    if (intakeUnitSelect) {
+        intakeUnitSelect.addEventListener('change', (e) => {
+            currentIntakeUnit = e.target.value;
+            updateIntakeNutrition();
+        });
+    }
+
+    // 食物 Emoji 切换逻辑 (Popover)
+    const btnFoodEmoji = document.getElementById('btn-food-emoji');
+    const emojiPopover = document.getElementById('emoji-popover');
+
+    if (btnFoodEmoji && emojiPopover) {
+        btnFoodEmoji.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPopover.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!btnFoodEmoji.contains(e.target) && !emojiPopover.contains(e.target)) {
+                emojiPopover.classList.add('hidden');
+            }
+        });
+
+        const emojiSpans = emojiPopover.querySelectorAll('.emoji-grid span');
+        emojiSpans.forEach(span => {
+            span.addEventListener('click', () => {
+                const icon = span.textContent;
+                const name = span.dataset.name;
+
+                if (span.classList.contains('custom-emoji-btn')) {
+                    btnFoodEmoji.textContent = '🍽️';
+                    if (inputFoodName) {
+                        inputFoodName.value = '';
+                        inputFoodName.placeholder = '请输入自定义食物名称';
+                        inputFoodName.classList.remove('input-error');
+                        inputFoodName.focus();
+                    }
+                } else {
+                    btnFoodEmoji.textContent = icon;
+                    if (inputFoodName && name) {
+                        inputFoodName.value = name;
+                        inputFoodName.classList.remove('input-error');
+                    }
+                }
+                emojiPopover.classList.add('hidden');
+            });
+        });
+    }
+
+    // 动态模拟计算营养摄入（基于单位和数值）
+    function updateIntakeNutrition() {
+        if (!inputFoodWeight || !intakeTotalVal) return;
+        const val = parseFloat(inputFoodWeight.value) || 0;
+
+        // 假设基础数据库中的某食物 (例如燕麦)： 每100g 包含 => 碳水 60g, 脂肪 8g, 蛋白 15g, 热量 380kcal
+        // 如果是按份数/个算，假设1份/个 = 150g
+        const multiplier = (currentIntakeUnit === 'g') ? (val / 100) : (val * 1.5);
+
+        const carbs = Math.round(60 * multiplier);
+        const fat = Math.round(8 * multiplier);
+        const protein = Math.round(15 * multiplier);
+        const totalCal = Math.round(380 * multiplier);
+
+        intakeTotalVal.textContent = totalCal;
+        if (valCarbs) valCarbs.textContent = `${carbs}g`;
+        if (valFat) valFat.textContent = `${fat}g`;
+        if (valProtein) valProtein.textContent = `${protein}g`;
+
+        // 更新条带宽度 (最大100%)
+        // 假设每日极限量: 碳水300g, 脂肪80g, 蛋白120g
+        if (barFillCarbs) barFillCarbs.style.width = `${Math.min(100, (carbs / 300) * 100)}%`;
+        if (barFillFat) barFillFat.style.width = `${Math.min(100, (fat / 80) * 100)}%`;
+        if (barFillProtein) barFillProtein.style.width = `${Math.min(100, (protein / 120) * 100)}%`;
+    }
+
+    if (inputFoodWeight) {
+        inputFoodWeight.addEventListener('input', updateIntakeNutrition);
+        // 初始化计算一次
+        updateIntakeNutrition();
+    }
+
+    if (btnConfirmIntake) {
+        btnConfirmIntake.addEventListener('click', () => {
+            // 防呆校验：静默红框提示
+            const name = inputFoodName ? inputFoodName.value.trim() : '';
+            const weightVal = parseFloat(inputFoodWeight ? inputFoodWeight.value : 0);
+
+            let hasError = false;
+
+            if (!name) {
+                if (inputFoodName) {
+                    inputFoodName.classList.add('input-error');
+                    inputFoodName.addEventListener('input', () => inputFoodName.classList.remove('input-error'), { once: true });
+                }
+                hasError = true;
+            }
+
+            if (isNaN(weightVal) || weightVal <= 0) {
+                if (inputFoodWeight) {
+                    inputFoodWeight.classList.add('input-error');
+                    inputFoodWeight.addEventListener('input', () => inputFoodWeight.classList.remove('input-error'), { once: true });
+                }
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            const cal = parseInt(intakeTotalVal.textContent) || 0;
+            const icon = btnFoodEmoji ? btnFoodEmoji.textContent : '🍽️';
+
+            handleIngestion(cal, name, icon);
+            closeIntakeFunc();
+        });
+    }
+
+    // 重置按钮
+
+    // ==========================================
+    // 消耗弹窗交互逻辑 (重构版)
+    // ==========================================
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const exerciseIconsGrid = document.getElementById('exercise-icons-grid');
+    const inputExValue = document.getElementById('input-exercise-value');
+    const exUnitSelect = document.getElementById('exercise-unit-select');
+    const equivalentItem = document.querySelector('.equivalent-item');
+    const customExPanel = document.getElementById('custom-exercise-panel');
+    const customExName = document.getElementById('custom-ex-name');
+    const customExCal = document.getElementById('custom-ex-cal');
+
+    const exerciseDict = {
+        cardio: [
+            { id: '跑步', icon: '🏃', unit: '分钟', cal: 10 },      // 中速跑
+            { id: '慢跑', icon: '🏃‍♂️', unit: '分钟', cal: 8 },     // 慢跑/ jogging
+            { id: '快走', icon: '🚶‍♀️', unit: '分钟', cal: 5 },      // 原步行15过高，修正为5
+            { id: '骑行', icon: '🚴', unit: '分钟', cal: 8 },       // 休闲骑行
+            { id: '游泳', icon: '🏊', unit: '分钟', cal: 12 },      // 中等强度
+            { id: '跳绳', icon: '🪢', unit: '分钟', cal: 12 },       // 快速跳绳
+            { id: '椭圆机', icon: '🏃‍♀️', unit: '分钟', cal: 9 },    // 椭圆机
+            { id: '划船机', icon: '🚣', unit: '分钟', cal: 10 },     // 划船机
+            { id: '爬楼梯', icon: '🧗', unit: '分钟', cal: 9 },      // 上楼梯
+            { id: 'HIIT', icon: '⚡', unit: '分钟', cal: 15 },     // 高强度间歇
+            { id: '自定义', icon: '✏️', unit: '无', cal: 0, isCustom: true }
+        ],
+        strength: [
+            { id: '力量训练', icon: '🏋️', unit: '分钟', cal: 6 },   // 一般力量训练
+            { id: '俯卧撑', icon: '💪', unit: '次', cal: 0.5 },
+            { id: '深蹲', icon: '🦵', unit: '次', cal: 0.6 },
+            { id: '卷腹', icon: '🫃', unit: '次', cal: 0.4 },
+            { id: '引体向上', icon: '🧗‍♂️', unit: '次', cal: 1.2 },  // 自重较大
+            { id: '卧推', icon: '🏋️‍♂️', unit: '次', cal: 0.8 },      // 杠铃卧推（每次）
+            { id: '硬拉', icon: '🏋️‍♀️', unit: '次', cal: 1.0 },      // 硬拉
+            { id: '哑铃弯举', icon: '💪', unit: '次', cal: 0.3 },
+            { id: '平板支撑', icon: '🧘', unit: '分钟', cal: 4 },    // 静态核心
+            { id: '臀桥', icon: '🍑', unit: '次', cal: 0.5 },
+            { id: '自定义', icon: '✏️', unit: '无', cal: 0, isCustom: true }
+        ],
+        stretch: [
+            { id: '泡沫轴', icon: '🧻', unit: '分钟', cal: 3 },
+            { id: '腿部拉伸', icon: '🦵', unit: '分钟', cal: 3 },
+            { id: '臀部拉伸', icon: '🍑', unit: '分钟', cal: 3 },
+            { id: '手臂拉伸', icon: '💪', unit: '分钟', cal: 3 },
+            { id: '全身拉伸', icon: '😌', unit: '分钟', cal: 3 },
+            { id: '自定义', icon: '✏️', unit: '无', cal: 0, isCustom: true }
+        ]
+    };
+
+    let currentCategory = 'cardio';
+    let currentSelectedEx = null;
+
+    // 渲染运动项目网格
+    function renderExerciseGrid() {
+        if (!exerciseIconsGrid) return;
+        exerciseIconsGrid.innerHTML = '';
+        const list = exerciseDict[currentCategory] || [];
+        list.forEach((ex, idx) => {
+            const card = document.createElement('div');
+            // 自动选中第一个，或者保持之前的选中（如果在同类里）
+            const isSelected = (currentSelectedEx && currentSelectedEx.id === ex.id) || (!currentSelectedEx && idx === 0);
+            if (isSelected) currentSelectedEx = ex;
+
+            card.className = `exercise-card ${isSelected ? 'selected' : ''}`;
+            card.innerHTML = `
+                <span class="exercise-icon">${ex.icon}</span>
+                <span class="exercise-name">${ex.id}</span>
+            `;
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.exercise-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                currentSelectedEx = ex;
+                if (exUnitSelect) exUnitSelect.value = ex.unit;
+                updateBurnCalculation();
+            });
+            exerciseIconsGrid.appendChild(card);
+        });
+        if (exUnitSelect && currentSelectedEx) exUnitSelect.value = currentSelectedEx.unit;
+        updateBurnCalculation();
+    }
+
+    // 大类切换
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentCategory = btn.dataset.category;
+            currentSelectedEx = null; // 切换大类时重置具体项目选择
+            renderExerciseGrid();
+        });
+    });
+
+    // 计算热量并更新UI
+    function updateBurnCalculation() {
+        if (!burnTotalVal || !currentSelectedEx) return;
+
+        // 如果是自定义运动
+        if (currentSelectedEx.isCustom) {
+            // 原生输入框置灰禁用
+            if (inputExValue) inputExValue.disabled = true;
+            if (exUnitSelect) exUnitSelect.disabled = true;
+            // 显示自定义输入面板
+            if (customExPanel) customExPanel.classList.remove('hidden');
+
+            // 直接取自定义界面的总热量并舍入
+            const val = parseFloat(customExCal ? customExCal.value : 0) || 0;
+            burnTotalVal.textContent = Math.round(val);
+        } else {
+            // 恢复原生输入框
+            if (inputExValue) inputExValue.disabled = false;
+            if (exUnitSelect) exUnitSelect.disabled = false;
+            // 隐藏自定义输入面板
+            if (customExPanel) customExPanel.classList.add('hidden');
+
+            // 根据运动类型的单价热量公式计算
+            const val = parseFloat(inputExValue ? inputExValue.value : 0) || 0;
+            burnTotalVal.textContent = Math.round(val * currentSelectedEx.cal);
+        }
+
+        // 根据热量计算食物等效（大概 1碗米饭 = 200kcal）
+        const totalBurn = parseInt(burnTotalVal.textContent) || 0;
+        if (equivalentItem) {
+            const bowls = (totalBurn / 200).toFixed(1);
+            equivalentItem.textContent = `🍚 ${bowls}碗米饭`;
+        }
+    }
+
+    if (inputExValue) {
+        inputExValue.addEventListener('input', updateBurnCalculation);
+    }
+    if (customExCal) {
+        customExCal.addEventListener('input', updateBurnCalculation);
+    }
+
+    // 4. 心情打分
+    if (moodEmojis) {
+        moodEmojis.forEach(emoji => {
+            emoji.addEventListener('click', () => {
+                moodEmojis.forEach(e => e.classList.remove('selected'));
+                emoji.classList.add('selected');
+            });
+        });
+    }
+
+    // 5. 确认记录运动
+    if (btnConfirmExercise) {
+        btnConfirmExercise.addEventListener('click', () => {
+            let hasError = false;
+
+            // 检查自定义运动与常规运动的空值
+            if (currentSelectedEx && currentSelectedEx.isCustom) {
+                const name = customExName ? customExName.value.trim() : '';
+                const calVal = parseFloat(customExCal ? customExCal.value : 0);
+
+                if (!name) {
+                    if (customExName) {
+                        customExName.classList.add('input-error');
+                        customExName.addEventListener('input', () => customExName.classList.remove('input-error'), { once: true });
+                    }
+                    hasError = true;
+                }
+                if (isNaN(calVal) || calVal <= 0) {
+                    if (customExCal) {
+                        customExCal.classList.add('input-error');
+                        customExCal.addEventListener('input', () => customExCal.classList.remove('input-error'), { once: true });
+                    }
+                    hasError = true;
+                }
+            } else {
+                const val = parseFloat(inputExValue ? inputExValue.value : 0);
+                if (isNaN(val) || val <= 0) {
+                    if (inputExValue) {
+                        inputExValue.classList.add('input-error');
+                        inputExValue.addEventListener('input', () => inputExValue.classList.remove('input-error'), { once: true });
+                    }
+                    hasError = true;
+                }
+            }
+
+            if (hasError) return;
+
+            const cal = parseInt(burnTotalVal.textContent) || 0;
+            if (cal > 0) {
+                let exName = '运动';
+                let icon = '🏃';
+                let unitStr = '';
+
+                if (currentSelectedEx) {
+                    if (currentSelectedEx.isCustom) {
+                        exName = customExName ? customExName.value.trim() : '自定义运动';
+                        icon = '✏️';
+                    } else {
+                        exName = currentSelectedEx.id;
+                        icon = currentSelectedEx.icon;
+                    }
+                }
+
+                const val = parseFloat(inputExValue && (!currentSelectedEx || !currentSelectedEx.isCustom) ? inputExValue.value : 0);
+                const unit = exUnitSelect ? exUnitSelect.value : '';
+                if (val > 0) {
+                    unitStr = `${exName} ${val} ${unit}`;
+                }
+
+                handleExercise(cal, exName, icon, unitStr);
+                closeExerciseFunc();
+            }
+        });
+    }
+
+    if (btnReset) btnReset.addEventListener('click', () => { resetDay(); });
+
+    // 自定义 Select 初始化逻辑
+    function initCustomSelects() {
+        const wrappers = document.querySelectorAll('.custom-select-wrapper');
+        wrappers.forEach(wrapper => {
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const triggerValue = wrapper.querySelector('.custom-select-value');
+            const optionsPanel = wrapper.querySelector('.custom-select-options');
+            const hiddenSelect = wrapper.querySelector('.hidden-select');
+
+            if (!trigger || !optionsPanel || !hiddenSelect) return;
+
+            trigger.addEventListener('click', (e) => {
+                if (trigger.classList.contains('disabled')) return;
+                e.stopPropagation();
+
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) {
+                        w.classList.remove('open');
+                        const p = w.querySelector('.custom-select-options');
+                        if (p) p.classList.add('hidden');
+                    }
+                });
+
+                wrapper.classList.toggle('open');
+                optionsPanel.classList.toggle('hidden');
+            });
+
+            const options = optionsPanel.querySelectorAll('.custom-option');
+            options.forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const val = opt.dataset.value;
+                    triggerValue.textContent = opt.textContent;
+                    hiddenSelect.value = val;
+                    hiddenSelect.dispatchEvent(new Event('change'));
+
+                    wrapper.classList.remove('open');
+                    optionsPanel.classList.add('hidden');
+                });
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('open');
+                    const panel = wrapper.querySelector('.custom-select-options');
+                    if (panel) panel.classList.add('hidden');
+                }
+            });
+        });
+    }
+
+    // 初始化渲染消耗弹窗网格
+    renderExerciseGrid();
+
+    // 初始化全局事件与组件
+    initCustomSelects();
     // 初始化
     updateView();
     renderJournal(); // 初始化渲染占位图

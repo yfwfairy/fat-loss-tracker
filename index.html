@@ -207,7 +207,7 @@
                     <div class="journal-timeline active-view" id="journalTimeline">
                         <!-- 动态内容由此渲染 -->
                         <div class="journal-placeholder" id="journalPlaceholder">
-                            <div class="placeholder-icon">✍️</div>
+                            <img src="assets/empty_box.png" alt="Empty" class="placeholder-img">
                             <p>开始今天的记录吧～</p>
                         </div>
                     </div>
@@ -445,6 +445,268 @@
             <footer class="modal-footer">
                 <button class="btn-fold-panel hidden" id="btn-fold-panel">« 收起</button>
                 <button class="btn-primary" id="save-profile-btn">保存设置</button>
+            </footer>
+        </div>
+    </div>
+    <!-- 4. 记摄入弹窗 -->
+    <div class="modal-overlay hidden" id="modal-log-intake">
+        <div class="profile-settings-modal log-modal">
+            <header class="modal-header">
+                <h3>🍞 记摄入</h3>
+                <button class="close-btn" id="close-log-intake">×</button>
+            </header>
+
+            <div class="modal-body log-modal-body-split">
+                <!-- 左列：输入与选项 -->
+                <div class="intake-left-col">
+                    <!-- 食物名称 -->
+                    <div class="input-group">
+                        <label class="input-label">🍳 食物名称</label>
+                        <div class="food-input-wrapper">
+                            <div class="emoji-picker-container">
+                                <button class="food-emoji-btn" id="btn-food-emoji" title="选择分类图标">❓</button>
+                                <!-- Emoji 选择浮窗 -->
+                                <div class="emoji-popover hidden" id="emoji-popover">
+                                    <div class="emoji-grid">
+                                        <span class="custom-emoji-btn" data-name="" title="自定义">➕</span>
+                                        <span data-name="汉堡">🍔</span><span data-name="薯条">🍟</span><span
+                                            data-name="披萨">🍕</span>
+                                        <span data-name="梨">🍐</span><span data-name="面包">🍞</span><span
+                                            data-name="鸡排">🍗</span><span data-name="沙拉">🥗</span>
+                                        <span data-name="苹果">🍎</span><span data-name="蛋糕">🍰</span><span
+                                            data-name="面条">🍜</span><span data-name="煎蛋">🍳</span>
+                                        <span data-name="牛奶">🥛</span><span data-name="草莓">🍓</span><span
+                                            data-name="牛油果">🥑</span><span data-name="肉类">🍖</span>
+                                    </div>
+                                    <div class="popover-arrow"></div>
+                                </div>
+                            </div>
+                            <input type="text" class="styled-input" id="input-food-name" placeholder="例如：燕麦片、鸡胸肉...">
+                        </div>
+                    </div>
+
+                    <!-- 份量输入 (带单位切换) -->
+                    <div class="input-group">
+                        <label class="input-label">⚖️ 摄入量</label>
+                        <div class="input-with-unit-group" style="display: flex; gap: 8px;">
+                            <input type="number" class="styled-input" id="input-food-weight" placeholder="输入数值"
+                                value="0" min="1" step="1" style="flex: 1;">
+
+                            <div class="custom-select-wrapper" style="width: 70px;" id="intake-unit-custom-wrapper">
+                                <select class="hidden-select" id="intake-unit-select" style="display:none;">
+                                    <option value="g">g</option>
+                                    <option value="份">份</option>
+                                </select>
+                                <div class="custom-select-trigger styled-input">
+                                    <span class="custom-select-value">g</span>
+                                    <span class="custom-select-arrow">▼</span>
+                                </div>
+                                <div class="custom-select-options hidden">
+                                    <div class="custom-option" data-value="g">g</div>
+                                    <div class="custom-option" data-value="份">份</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 餐别选择 -->
+                    <div class="input-group">
+                        <label class="input-label">🍽️ 用餐时间</label>
+                        <div class="meal-selector">
+                            <button class="meal-btn active" data-meal="早餐">早餐</button>
+                            <button class="meal-btn" data-meal="午餐">午餐</button>
+                            <button class="meal-btn" data-meal="晚餐">晚餐</button>
+                            <button class="meal-btn" data-meal="加餐">加餐</button>
+                        </div>
+                    </div>
+
+                    <!-- 备注 -->
+                    <div class="input-group">
+                        <label class="input-label">📝 备注 (可选)</label>
+                        <input type="text" class="styled-input" id="input-food-memo" placeholder="记录这顿饭的感受...">
+                    </div>
+                </div>
+
+                <!-- 右列：营养评估 -->
+                <div class="intake-right-panel">
+                    <!-- 营养成分卡片 -->
+                    <div class="nutrition-card">
+                        <div>
+                            <div class="nutrition-title">营养评估</div>
+                            <p class="nutrition-subtitle">基于当前摄入量动态测算
+                            </p>
+
+                            <div class="nutrient-row">
+                                <span class="nutrient-icon">🌾</span>
+                                <span class="nutrient-name">碳水</span>
+                                <div class="nutrient-bar-bg">
+                                    <div class="nutrient-bar-fill bar-carbs" id="bar-fill-carbs" style="width: 45%;">
+                                    </div>
+                                </div>
+                                <span class="nutrient-value" id="val-carbs">45g</span>
+                            </div>
+
+                            <div class="nutrient-row">
+                                <span class="nutrient-icon">🥑</span>
+                                <span class="nutrient-name">脂肪</span>
+                                <div class="nutrient-bar-bg">
+                                    <div class="nutrient-bar-fill bar-fat" id="bar-fill-fat" style="width: 20%;"></div>
+                                </div>
+                                <span class="nutrient-value" id="val-fat">8g</span>
+                            </div>
+
+                            <div class="nutrient-row">
+                                <span class="nutrient-icon">🥚</span>
+                                <span class="nutrient-name">蛋白</span>
+                                <div class="nutrient-bar-bg">
+                                    <div class="nutrient-bar-fill bar-protein" id="bar-fill-protein"
+                                        style="width: 35%;"></div>
+                                </div>
+                                <span class="nutrient-value" id="val-protein">12g</span>
+                            </div>
+                        </div>
+
+                        <!-- 热量总计 -->
+                        <div class="calorie-total intake-total">
+                            <div class="calorie-label">🔥 预计转化热量</div>
+                            <div class="calorie-number">
+                                <span id="intake-total-val">300</span><span class="calorie-unit">kcal</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <button class="btn-cancel" id="cancel-log-intake">取消</button>
+                <button class="btn-primary" id="confirm-log-intake">确认记录</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- 5. 记消耗弹窗 -->
+    <div class="modal-overlay hidden" id="modal-log-exercise">
+        <div class="profile-settings-modal log-modal">
+            <header class="modal-header">
+                <h3>🏃 记消耗</h3>
+                <button class="close-btn" id="close-log-exercise">×</button>
+            </header>
+
+            <div class="modal-body log-modal-body-exercise">
+                <!-- 上方结构：左右分栏 -->
+                <div class="exercise-top-section">
+                    <!-- 左侧：大类选择与数值录入 -->
+                    <div class="exercise-left-col">
+                        <div class="input-group">
+                            <label class="input-label">🎯 运动大类</label>
+                            <div class="exercise-category-selector">
+                                <button class="category-btn active" data-category="cardio">有氧</button>
+                                <button class="category-btn" data-category="strength">无氧</button>
+                                <button class="category-btn" data-category="stretch">拉伸</button>
+                            </div>
+                        </div>
+
+                        <div class="input-group" id="regular-exercise-amount">
+                            <label class="input-label">⏱️ 运动量</label>
+                            <div class="input-with-unit-group" style="display: flex; gap: 8px;">
+                                <input type="number" class="styled-input" id="input-exercise-value" placeholder="输入数值"
+                                    value="0" min="1" step="1" style="flex: 1;">
+                                <div class="custom-select-wrapper" style="width: 80px;"
+                                    id="exercise-unit-custom-wrapper">
+                                    <select class="hidden-select" id="exercise-unit-select" style="display:none;">
+                                        <option value="分钟">分钟</option>
+                                        <option value="次">次</option>
+                                        <option value="组">组</option>
+                                    </select>
+                                    <div class="custom-select-trigger styled-input">
+                                        <span class="custom-select-value">分钟</span>
+                                        <span class="custom-select-arrow">▼</span>
+                                    </div>
+                                    <div class="custom-select-options hidden">
+                                        <div class="custom-option" data-value="分钟">分钟</div>
+                                        <div class="custom-option" data-value="次">次</div>
+                                        <div class="custom-option" data-value="组">组</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- 运动感受 -->
+                        <div class="input-group" style="margin-bottom: 0; flex: 1;">
+                            <label class="input-label">😊 运动感受</label>
+                            <div class="mood-rating">
+                                <span class="mood-emoji" data-mood="exhausted">😰</span>
+                                <span class="mood-emoji" data-mood="tired">😅</span>
+                                <span class="mood-emoji selected" data-mood="good">😄</span>
+                                <span class="mood-emoji" data-mood="strong">💪</span>
+                                <span class="mood-emoji" data-mood="onfire">🔥</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：运动项目网格 -->
+                    <div class="exercise-right-panel">
+
+                        <div class="exercise-grid" id="exercise-icons-grid">
+                            <!-- JS动态填充，默认显示有氧 -->
+                            <div class="exercise-card selected" data-ex="跑步" data-unit="分钟">
+                                <span class="exercise-icon">🏃</span>
+                                <span class="exercise-name">跑步</span>
+                            </div>
+                            <div class="exercise-card" data-ex="骑行" data-unit="分钟">
+                                <span class="exercise-icon">🚴</span>
+                                <span class="exercise-name">骑行</span>
+                            </div>
+                            <div class="exercise-card" data-ex="游泳" data-unit="分钟">
+                                <span class="exercise-icon">🏊</span>
+                                <span class="exercise-name">游泳</span>
+                            </div>
+                            <div class="exercise-card" data-ex="跳绳" data-unit="分钟">
+                                <span class="exercise-icon">🧗</span>
+                                <span class="exercise-name">跳绳</span>
+                            </div>
+                        </div>
+
+                        <!-- 自定义运动专用输入框 (默认隐藏) -->
+                        <div class="input-group hidden" id="custom-exercise-panel">
+                            <label class="input-label" style="padding-top: 20px;">✏️ 自定义运动详情</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" class="styled-input" id="custom-ex-name" placeholder="名称(如拳击)"
+                                    style="flex: 1;">
+                                <div class="input-with-unit-group" style="width: 110px;">
+                                    <input type="number" class="styled-input" id="custom-ex-cal" placeholder="总热量"
+                                        min="30" step="5" style="width: 100%; padding-right: 12px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 华丽的分隔线 -->
+                <div class="exercise-divider"></div>
+
+                <!-- 下方结构：感受与总结 -->
+                <div class="exercise-bottom-section">
+
+                    <!-- 消耗显示 -->
+                    <div class="calorie-burn" style="flex: 1; margin: 0;">
+                        <div class="burn-label">🔥 预计消耗热量</div>
+                        <div class="burn-number">
+                            <span id="burn-total-val">0</span><span class="burn-unit">kcal</span>
+                        </div>
+                        <div class="food-equivalent" style="justify-content: center; font-size: 13px;">
+                            <span>相当于</span>
+                            <span class="equivalent-item">🍚 1.5碗米饭</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <button class="btn-cancel" id="cancel-log-exercise">取消</button>
+                <button class="btn-primary" id="confirm-log-exercise">确认记录</button>
             </footer>
         </div>
     </div>

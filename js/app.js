@@ -49,5 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // 点击占位图跳转到“我的旅程”tab
+    const journalPlaceholder = document.getElementById('journalPlaceholder');
+    if (journalPlaceholder) {
+        journalPlaceholder.addEventListener('click', () => {
+            const dashboardTab = document.querySelector('.nav-item[data-target="dashboard"]');
+            if (dashboardTab) dashboardTab.click();
+        });
+    }
+
     // 手账导航与弹窗统筹在 picker.js 中处理
 });
