@@ -564,7 +564,6 @@ body {
 }
 
 .placeholder-img {
-    height: 120px;
     width: 120px;
     margin-bottom: 20px;
     /* 通过滤镜组合模拟 --bg-main (#8B6A70) 的浆果冷色调 */
