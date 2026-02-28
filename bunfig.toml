@@ -1,0 +1,6 @@
+[install]
+workspace = [
+  "frontend",
+  "backend",
+  "packages/*"
+]
