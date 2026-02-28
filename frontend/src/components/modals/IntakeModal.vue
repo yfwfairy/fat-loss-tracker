@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import CustomSelect from '../ui/CustomSelect.vue';
 import type { IntakeUnit } from '@fat-loss-tracker/shared-types';
 
@@ -14,64 +14,480 @@ const inputAmount = ref<number | null>(null);
 const unit = ref<IntakeUnit>('g');
 const mealType = ref('午餐'); // default mock
 
-const caloriesPer100g = 150; // mock core DB variable
+const isEmojiPopoverOpen = ref(false);
+const selectedEmoji = ref('❓');
+
+// Mock 食物列表数据 (后续由服务端下发)
+const mockFoods = [
+  { name: '汉堡', icon: '🍔', calories: 250 },
+  { name: '薯条', icon: '🍟', calories: 310 },
+  { name: '比萨', icon: '🍕', calories: 260 },
+  { name: '梨子', icon: '🍐', calories: 50 },
+  { name: '面包', icon: '🍞', calories: 280 },
+  { name: '鸡腿', icon: '🍗', calories: 220 },
+  { name: '沙拉', icon: '🥗', calories: 40 },
+  { name: '苹果', icon: '🍎', calories: 52 },
+  { name: '蛋糕', icon: '🍰', calories: 350 },
+  { name: '拉面', icon: '🍜', calories: 120 },
+  { name: '煎蛋', icon: '🍳', calories: 155 },
+  { name: '牛奶', icon: '🥛', calories: 60 },
+  { name: '草莓', icon: '🍓', calories: 32 },
+  { name: '牛油果', icon: '🥑', calories: 160 },
+  { name: '烤肉', icon: '🍖', calories: 240 }
+];
+
+const currentCaloriesPer100g = ref(150); // 默认 150
+
+const selectFood = (food: { name: string, icon: string, calories: number }) => {
+  foodName.value = food.name;
+  selectedEmoji.value = food.icon;
+  currentCaloriesPer100g.value = food.calories;
+  isEmojiPopoverOpen.value = false;
+  errors.value = errors.value.filter(e => e !== 'foodName');
+};
+
+const resetToCustom = () => {
+  selectedEmoji.value = '🍽️';
+  isEmojiPopoverOpen.value = false;
+};
 
 const calculatedCalories = computed(() => {
   if (!inputAmount.value) return 0;
   if (unit.value === 'g') {
-    return Math.round((inputAmount.value / 100) * caloriesPer100g);
+    return Math.round((inputAmount.value / 100) * currentCaloriesPer100g.value);
   } else {
-    return Math.round(inputAmount.value * caloriesPer100g);
+    return Math.round(inputAmount.value * currentCaloriesPer100g.value);
   }
 });
 
+const errors = ref<string[]>([]);
+
 const submit = () => {
-  if (!foodName.value || !inputAmount.value) return;
+  errors.value = [];
+  if (!foodName.value) errors.value.push('foodName');
+  if (!inputAmount.value || inputAmount.value <= 0) errors.value.push('amount');
+
+  if (errors.value.length > 0) return;
+
   emit('submit', {
     type: 'intake',
     foodName: foodName.value,
     amount: inputAmount.value,
     unit: unit.value,
     mealType: mealType.value,
-    calories: calculatedCalories.value
+    calories: calculatedCalories.value,
+    emoji: selectedEmoji.value === '❓' ? '🍽️' : selectedEmoji.value
   });
   foodName.value = '';
   inputAmount.value = null;
+  selectedEmoji.value = '❓';
   emit('close');
 };
+
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    errors.value = [];
+    foodName.value = '';
+    inputAmount.value = null;
+    selectedEmoji.value = '❓';
+    currentCaloriesPer100g.value = 150;
+  }
+});
 </script>
 
 <template>
-  <div class="modal-overlay" :class="{ active: isOpen }" @click.self="emit('close')">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>记录摄入</h3>
-        <button class="close-btn" @click="emit('close')">&times;</button>
-      </div>
-      <div class="modal-body">
-        
-        <div class="input-group">
-          <label>吃/喝了什么？</label>
-          <input type="text" v-model="foodName" class="styled-input" placeholder="例如：拿铁、水煮蛋..." />
-        </div>
+  <div class="modal-overlay" :class="{ hidden: !isOpen }" @click.self="emit('close')">
+        <div class="profile-settings-modal log-modal">
+            <header class="modal-header">
+                <h3>🍞 记摄入</h3>
+                <button class="close-btn" @click="emit('close')">×</button>
+            </header>
 
-        <div class="input-group">
-          <label>吃了多少？</label>
-          <div class="weight-input-container">
-            <input type="number" v-model="inputAmount" class="styled-input" placeholder="0" />
-            <CustomSelect 
-              :options="[{value: 'g', label: '克 (g)'}, {value: '份', label: '份 (Serving)'}]" 
-              v-model="unit" 
-            />
-          </div>
-        </div>
+            <div class="modal-body log-modal-body-split">
+                <!-- 左列：输入与选项 -->
+                <div class="intake-left-col">
+                    <!-- 食物名称 -->
+                    <div class="input-group">
+                        <label class="input-label">🍳 食物名称</label>
+                        <div class="food-input-wrapper">
+                            <div class="emoji-picker-container" style="position: relative;">
+                                <button class="food-emoji-btn" title="选择分类图标" @click="isEmojiPopoverOpen = !isEmojiPopoverOpen">{{ selectedEmoji }}</button>
+                                
+                                <!-- Emoji 选择浮窗 -->
+                                <div class="emoji-popover" :class="{ hidden: !isEmojiPopoverOpen }">
+                                    <div class="emoji-grid">
+                                        <span class="custom-emoji-btn" title="自定义" @click="resetToCustom">➕</span>
+                                        <span v-for="food in mockFoods" :key="food.name" @click="selectFood(food)">
+                                            {{ food.icon }}
+                                        </span>
+                                    </div>
+                                    <div class="popover-arrow"></div>
+                                </div>
+                            </div>
+                            <input type="text" v-model="foodName" class="styled-input" :class="{ 'input-error': errors.includes('foodName') }" placeholder="例如：燕麦片、鸡胸肉..." @input="errors = errors.filter(e => e !== 'foodName')">
+                        </div>
+                    </div>
 
-        <div class="calc-preview">
-          约摄入 <span class="highlight">{{ calculatedCalories }}</span> 千卡
-        </div>
+                    <!-- 份量输入 (带单位切换) -->
+                    <div class="input-group">
+                        <label class="input-label">⚖️ 摄入量</label>
+                        <div class="input-with-unit-group" style="display: flex; gap: 8px;">
+                            <input type="number" v-model="inputAmount" class="styled-input" :class="{ 'input-error': errors.includes('amount') }" placeholder="输入数值" min="1" step="1" style="flex: 1;" @input="errors = errors.filter(e => e !== 'amount')">
+                            <div class="custom-select-wrapper" style="width: 80px;">
+                                    <CustomSelect 
+                                       :options="[{value: 'g', label: '克'}, {value: '份', label: '份'}]"  v-model="unit" 
+                                    />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 餐别选择 -->
+                    <div class="input-group">
+                        <label class="input-label">🍽️ 用餐时间</label>
+                        <div class="meal-selector">
+                            <button class="meal-btn" :class="{ active: mealType === '早餐' }" @click="mealType = '早餐'">早餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '午餐' }" @click="mealType = '午餐'">午餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '晚餐' }" @click="mealType = '晚餐'">晚餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '加餐' }" @click="mealType = '加餐'">加餐</button>
+                        </div>
+                    </div>
 
-        <button class="primary-btn" @click="submit" :disabled="!foodName || !inputAmount">确认记录</button>
-      </div>
-    </div>
+                    <!-- 备注 -->
+                    <div class="input-group">
+                        <label class="input-label">📝 备注 (可选)</label>
+                        <input type="text" class="styled-input" placeholder="记录这顿饭的感受...">
+                    </div>
+                </div>
+
+                <!-- 右列：营养评估 -->
+                <div class="intake-right-panel">
+                    <!-- 营养成分卡片 -->
+                    <div class="nutrition-card">
+                        <div>
+                            <div class="nutrition-title">营养评估</div>
+                            <p class="nutrition-subtitle">基于当前摄入量动态测算</p>
+
+                            <div class="nutrient-row">
+                                <span class="nutrient-icon">🌾</span>
+                                <span class="nutrient-name">碳水</span>
+                                <div class="nutrient-bar-bg">
+                                    <div class="nutrient-bar-fill bar-carbs" style="width: 45%;"></div>
+                                </div>
+                                <span class="nutrient-value">45g</span>
+                            </div>
+
+                            <div class="nutrient-row">
+                                <span class="nutrient-icon">🥑</span>
+                                <span class="nutrient-name">脂肪</span>
+                                <div class="nutrient-bar-bg">
+                                    <div class="nutrient-bar-fill bar-fat" style="width: 20%;"></div>
+                                </div>
+                                <span class="nutrient-value">8g</span>
+                            </div>
+
+                            <div class="nutrient-row">
+                                <span class="nutrient-icon">🥚</span>
+                                <span class="nutrient-name">蛋白</span>
+                                <div class="nutrient-bar-bg">
+                                    <div class="nutrient-bar-fill bar-protein" style="width: 35%;"></div>
+                                </div>
+                                <span class="nutrient-value">12g</span>
+                            </div>
+                        </div>
+
+                        <!-- 热量总计 -->
+                        <div class="calorie-total intake-total">
+                            <div class="calorie-label">🔥 预计转化热量</div>
+                            <div class="calorie-number">
+                                <span>{{ calculatedCalories }}</span><span class="calorie-unit">kcal</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="modal-footer">
+                <button class="btn-cancel" @click="emit('close')">取消</button>
+                <button class="btn-primary" @click="submit">确认记录</button>
+            </footer>
+        </div>
   </div>
 </template>
+
+<style scoped>
+
+/* 分栏布局 */
+.log-modal-body-split {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    align-items: stretch;
+    overflow-y: auto;
+}
+
+.intake-left-col {
+    flex: 1.3;
+    padding-right: 24px;
+    border-right: 2px dashed rgba(139, 106, 112, 0.1);
+}
+
+.intake-right-panel {
+    flex: 1;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 食物名称输入行 */
+.food-input-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.food-emoji-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #F8F9FA;
+    border: 2px solid transparent;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.food-emoji-btn:hover {
+    background: #FFEDEA;
+    border-color: var(--color-accent);
+}
+
+/* Emoji Picker 容器 */
+.emoji-picker-container {
+    position: relative;
+}
+
+/* Emoji 浮窗 */
+.emoji-popover {
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 220px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    z-index: 100;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-origin: top left;
+}
+
+.emoji-popover.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95) translateY(-5px);
+    pointer-events: none;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.emoji-grid span {
+    font-size: 24px;
+    text-align: center;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.emoji-grid span:hover {
+    background: #F8F9FA;
+    transform: scale(1.1);
+}
+
+.custom-emoji-btn {
+    border: 2px dashed rgba(139, 106, 112, 0.3);
+    color: var(--text-secondary);
+    font-size: 20px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 浮窗小箭头 */
+.popover-arrow {
+    position: absolute;
+    top: -6px;
+    left: 18px;
+    width: 12px;
+    height: 12px;
+    background: white;
+    transform: rotate(45deg);
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* 摄入量与单位水平排列 */
+.input-with-unit-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.input-with-unit-group .styled-input {
+    flex: 1;
+}
+
+/* 单位切换 Toggle */
+.unit-toggle {
+    display: flex;
+    gap: 4px;
+    background: #F8F9FA;
+    padding: 4px;
+    border-radius: 100px;
+}
+
+.unit-option {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.unit-option:hover {
+    color: var(--color-accent);
+}
+
+.unit-option.active {
+    background: white;
+    color: var(--color-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nutrition-card {
+    background: #FFF6F5;
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: inset 0 2px 5px rgba(242, 132, 130, 0.05);
+}
+
+.nutrition-title {
+    text-align: left;
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.nutrition-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.nutrient-row {
+    display: flex;
+    align-items: center;
+    margin: 12px 0;
+    gap: 12px;
+}
+
+.nutrient-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.nutrient-name {
+    width: 40px;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.nutrient-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.nutrient-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+
+.bar-carbs {
+    background: #D4A373;
+}
+
+/* 原木/麦色 */
+.bar-fat {
+    background: #E9C46A;
+}
+
+/* 柔黄 */
+.bar-protein {
+    background: #F28482;
+}
+
+/* 珊瑚粉 */
+
+.nutrient-value {
+    width: 40px;
+    text-align: right;
+    font-family: 'Nunito', monospace;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* 总结高亮区块 */
+.calorie-total {
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    text-align: center;
+    margin-top: 20px;
+    color: white;
+}
+
+.intake-total {
+    background: var(--color-light-red);
+    box-shadow: 0 8px 20px rgba(158, 132, 144, 0.2);
+}
+
+.food-equivalent {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.equivalent-item {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 8px;
+    border-radius: 8px;
+}
+
+</style>

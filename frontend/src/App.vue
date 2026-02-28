@@ -9,6 +9,7 @@ import JournalTimeline from './components/journal/JournalTimeline.vue'
 import type { JournalEntry } from '@fat-loss-tracker/shared-types'
 
 const pingResult = ref<string>('Pinging backend...')
+const currentView = ref('dashboard');
 
 onMounted(async () => {
   try {
@@ -31,19 +32,26 @@ const isExerciseOpen = ref(false);
 const isProfileOpen = ref(false);
 
 const journalEntries = ref<JournalEntry[]>([]);
+const viewDate = ref(new Date());
+
+const handleDateChange = (date: Date) => {
+  viewDate.value = date;
+  // TODO: 后续可根据 viewDate 从后端拉取该日期的记录
+  console.log('Selected date changed to:', date);
+};
 
 const handleIntakeSubmit = (data: any) => {
   mockIntake.value += data.calories;
   journalEntries.value.unshift({
     id: Date.now().toString(),
     userId: 'mock-id',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0] as string,
     timestamp: new Date().toISOString(),
     type: 'intake',
     calories: data.calories,
-    emoji: '☕',
+    emoji: data.emoji,
     title: data.foodName,
-    amount: data.amount,
+    weight: data.amount,
     unit: data.unit,
     mealType: data.mealType
   });
@@ -54,54 +62,59 @@ const handleExerciseSubmit = (data: any) => {
   journalEntries.value.unshift({
     id: Date.now().toString(),
     userId: 'mock-id',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0] as string,
     timestamp: new Date().toISOString(),
     type: 'exercise',
     calories: data.calories,
-    emoji: categoryToEmoji(data.category),
-    title: data.exerciseName,
+    emoji: data.emoji,
+    title: data.title || data.exerciseName,
     amount: data.amount,
     unit: data.unit,
-    category: data.category
+    category: data.category,
+    mood: data.mood
   });
 };
 
-const categoryToEmoji = (cat: string) => {
-  if (cat === '有氧') return '🏃';
-  if (cat === '无氧') return '🏋️';
-  if (cat === '拉伸') return '🧘';
-  return '🚶';
-};
 
 const handleProfileSave = (data: any) => {
   mockTarget.value = data.targetCalories;
   // TODO: update global nickname
 };
+
+const handleResetDay = () => {
+  mockIntake.value = 0;
+  mockBurn.value = 0;
+  journalEntries.value = [];
+};
 </script>
 
 <template>
-  <Layout>
+  <Layout :currentView="currentView" @changeView="v => currentView = v" @openProfile="isProfileOpen = true">
     <!-- 这里放置刚刚移植成功的卡路里水车大屏 -->
     <DashboardCards 
+      v-show="currentView === 'dashboard'"
       :targetCalories="mockTarget"
       :totalIntake="mockIntake"
       :totalBurn="mockBurn"
+      @openIntake="isIntakeOpen = true"
+      @openExercise="isExerciseOpen = true"
+      @resetDay="handleResetDay"
     />
 
     <!-- 为了调试，我们保留 Backend Ping Banner 放置在大屏下方 -->
-    <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 12px; font-weight: bold; color: var(--primary-color); text-align: center;">
+    <div v-show="currentView === 'dashboard'" style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 12px; font-weight: bold; color: var(--primary-color); text-align: center;">
       {{ pingResult }}
     </div>
 
-    <!-- 临时加减按钮，替代浮动FAB，测试弹窗 -->
-    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; margin-bottom: 20px;">
-      <button class="primary-btn" style="width: auto; padding: 0 20px; border-radius: 20px;" @click="isIntakeOpen = true">+ 记录饮食</button>
-      <button class="primary-btn exercise" style="width: auto; padding: 0 20px; border-radius: 20px;" @click="isExerciseOpen = true">- 记录运动</button>
-      <button class="primary-btn" style="width: auto; padding: 0 20px; background: #666; border-radius: 20px;" @click="isProfileOpen = true">👤 我的档案</button>
-    </div>
-
     <!-- 挂载手帐流 -->
-    <JournalTimeline :entries="journalEntries" />
+    <JournalTimeline 
+        v-show="currentView === 'journal'" 
+        :entries="journalEntries" 
+        :totalIntake="mockIntake"
+        :totalBurn="mockBurn"
+        :targetCalories="mockTarget"
+        @date-change="handleDateChange"
+    />
 
     <template #modals>
       <IntakeModal :isOpen="isIntakeOpen" @close="isIntakeOpen = false" @submit="handleIntakeSubmit" />
@@ -112,7 +125,5 @@ const handleProfileSave = (data: any) => {
 </template>
 
 <style>
-/* 强行引入原生工程的全局浆果日落 UI 样式库 */
-@import '/css/style.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
 </style>

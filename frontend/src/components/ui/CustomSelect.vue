@@ -40,9 +40,9 @@ const getLabel = (val: string) => {
   <div class="custom-select-wrapper" :class="{ open: isOpen }">
     <div class="custom-select-trigger" @click.stop="toggleMenu">
       <span class="custom-select-value">{{ getLabel(modelValue) }}</span>
-      <div class="custom-select-arrow"></div>
+      <div class="custom-select-arrow">▼</div>
     </div>
-    <div class="custom-options">
+    <div class="custom-select-options" :class="{ hidden: !isOpen }">
       <div 
         v-for="opt in options" 
         :key="opt.value"

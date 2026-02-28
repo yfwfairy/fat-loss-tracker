@@ -29,6 +29,7 @@ export interface IJournalEntryBase {
     calories: number; // 绝对值
     emoji: string;
     title: string;
+    mood?: string;
 }
 
 export interface IIntakeEntry extends IJournalEntryBase {
