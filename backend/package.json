@@ -7,9 +7,10 @@
     "dev": "bun run --hot index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/bun": "^1.3.9",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6"
+    "@types/express": "^5.0.6",
+    "@types/uuid": "^11.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -17,6 +18,7 @@
   "dependencies": {
     "@fat-loss-tracker/shared-types": "workspace:*",
     "cors": "^2.8.6",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "uuid": "^13.0.0"
   }
 }

@@ -30,20 +30,21 @@ export interface IJournalEntryBase {
     emoji: string;
     title: string;
     mood?: string;
+    meta?: any; // 用于存储特定类型的原始数据
 }
 
 export interface IIntakeEntry extends IJournalEntryBase {
     type: 'intake';
-    weight: number;
-    unit: IntakeUnit;
-    mealType: string; // 早餐, 午餐 等
+    weight?: number;
+    unit?: IntakeUnit;
+    mealType?: string; // 早餐, 午餐 等
 }
 
 export interface IExerciseEntry extends IJournalEntryBase {
     type: 'exercise';
-    amount: number;
-    unit: ExerciseUnit;
-    category: string; // 有氧, 无氧 等
+    amount?: number;
+    unit?: ExerciseUnit;
+    category?: string; // 有氧, 无氧 等
 }
 
 export type JournalEntry = IIntakeEntry | IExerciseEntry;

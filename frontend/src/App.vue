@@ -1,129 +1,117 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import Layout from './components/layout/Layout.vue'
 import DashboardCards from './components/dashboard/DashboardCards.vue'
 import IntakeModal from './components/modals/IntakeModal.vue'
 import ExerciseModal from './components/modals/ExerciseModal.vue'
 import ProfileModal from './components/modals/ProfileModal.vue'
 import JournalTimeline from './components/journal/JournalTimeline.vue'
-import type { JournalEntry } from '@fat-loss-tracker/shared-types'
+import { useUserStore } from './stores/user'
+import { useJournalStore } from './stores/journal'
 
-const pingResult = ref<string>('Pinging backend...')
+const userStore = useUserStore()
+const journalStore = useJournalStore()
+
 const currentView = ref('dashboard');
-
-onMounted(async () => {
-  try {
-    const res = await fetch('/api/ping')
-    const data = await res.json()
-    pingResult.value = `Backend Connection: ${data.status.toUpperCase()} (${data.message})`
-  } catch (e: any) {
-    pingResult.value = `Backend Connection Failed: ${e.message}`
-  }
-})
-
-// Mocks for Phase 3 visual testing
-const mockTarget = ref(1800);
-const mockIntake = ref(1200);
-const mockBurn = ref(300);
-
-// Modal visibility state
 const isIntakeOpen = ref(false);
 const isExerciseOpen = ref(false);
 const isProfileOpen = ref(false);
 
-const journalEntries = ref<JournalEntry[]>([]);
 const viewDate = ref(new Date());
+
+onMounted(async () => {
+    // 初始化加载所有核心数据
+    await Promise.all([
+        userStore.fetchUser(),
+        journalStore.fetchTodayData()
+    ]);
+});
+
+// 计算属性：从 Store 中提取数据
+const targetCalories = computed(() => userStore.user?.targetCalories || 2000);
+const totalIntake = computed(() => journalStore.totals.total_intake);
+const totalBurn = computed(() => journalStore.totals.total_burn);
+const journalEntries = computed(() => journalStore.entries);
 
 const handleDateChange = (date: Date) => {
   viewDate.value = date;
-  // TODO: 后续可根据 viewDate 从后端拉取该日期的记录
+  // TODO: 后续扩展示时按日期拉取
   console.log('Selected date changed to:', date);
 };
 
-const handleIntakeSubmit = (data: any) => {
-  mockIntake.value += data.calories;
-  journalEntries.value.unshift({
-    id: Date.now().toString(),
-    userId: 'mock-id',
-    date: new Date().toISOString().split('T')[0] as string,
-    timestamp: new Date().toISOString(),
+const handleIntakeSubmit = async (data: any) => {
+  await journalStore.addEntry({
     type: 'intake',
     calories: data.calories,
     emoji: data.emoji,
     title: data.foodName,
-    weight: data.amount,
-    unit: data.unit,
-    mealType: data.mealType
+    meta: {
+        amount: data.amount,
+        unit: data.unit,
+        mealType: data.mealType
+    }
   });
+  isIntakeOpen.value = false;
 };
 
-const handleExerciseSubmit = (data: any) => {
-  mockBurn.value += data.calories;
-  journalEntries.value.unshift({
-    id: Date.now().toString(),
-    userId: 'mock-id',
-    date: new Date().toISOString().split('T')[0] as string,
-    timestamp: new Date().toISOString(),
+const handleExerciseSubmit = async (data: any) => {
+  await journalStore.addEntry({
     type: 'exercise',
     calories: data.calories,
     emoji: data.emoji,
     title: data.title || data.exerciseName,
-    amount: data.amount,
-    unit: data.unit,
-    category: data.category,
-    mood: data.mood
+    meta: {
+        amount: data.amount,
+        unit: data.unit,
+        category: data.category,
+        mood: data.mood
+    }
   });
+  isExerciseOpen.value = false;
 };
 
-
-const handleProfileSave = (data: any) => {
-  mockTarget.value = data.targetCalories;
-  // TODO: update global nickname
+const handleProfileSave = async (data: any) => {
+  await userStore.updateProfile(data);
+  isProfileOpen.value = false;
 };
 
 const handleResetDay = () => {
-  mockIntake.value = 0;
-  mockBurn.value = 0;
-  journalEntries.value = [];
+  // TODO: 后端清空今日逻辑
+  console.log('Resetting day is not yet implemented on backend');
 };
 </script>
 
 <template>
   <Layout :currentView="currentView" @changeView="v => currentView = v" @openProfile="isProfileOpen = true">
-    <!-- 这里放置刚刚移植成功的卡路里水车大屏 -->
     <DashboardCards 
       v-show="currentView === 'dashboard'"
-      :targetCalories="mockTarget"
-      :totalIntake="mockIntake"
-      :totalBurn="mockBurn"
+      :targetCalories="targetCalories"
+      :totalIntake="totalIntake"
+      :totalBurn="totalBurn"
       @openIntake="isIntakeOpen = true"
       @openExercise="isExerciseOpen = true"
       @resetDay="handleResetDay"
     />
 
-    <!-- 为了调试，我们保留 Backend Ping Banner 放置在大屏下方 -->
-    <div v-show="currentView === 'dashboard'" style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 12px; font-weight: bold; color: var(--primary-color); text-align: center;">
-      {{ pingResult }}
-    </div>
-
-    <!-- 挂载手帐流 -->
     <JournalTimeline 
         v-show="currentView === 'journal'" 
         :entries="journalEntries" 
-        :totalIntake="mockIntake"
-        :totalBurn="mockBurn"
-        :targetCalories="mockTarget"
+        :totalIntake="totalIntake"
+        :totalBurn="totalBurn"
+        :targetCalories="targetCalories"
         @date-change="handleDateChange"
     />
 
     <template #modals>
       <IntakeModal :isOpen="isIntakeOpen" @close="isIntakeOpen = false" @submit="handleIntakeSubmit" />
       <ExerciseModal :isOpen="isExerciseOpen" @close="isExerciseOpen = false" @submit="handleExerciseSubmit" />
-      <ProfileModal :isOpen="isProfileOpen" @close="isProfileOpen = false" @save="handleProfileSave" />
+      <ProfileModal 
+        v-if="userStore.user"
+        :isOpen="isProfileOpen" 
+        :initialData="userStore.user"
+        @close="isProfileOpen = false" 
+        @save="handleProfileSave" 
+      />
     </template>
   </Layout>
 </template>
-
-<style>
-@import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
-</style>
