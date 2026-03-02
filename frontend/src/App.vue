@@ -20,11 +20,11 @@ const isProfileOpen = ref(false);
 const viewDate = ref(new Date());
 
 onMounted(async () => {
-    // 初始化加载所有核心数据
-    await Promise.all([
-        userStore.fetchUser(),
-        journalStore.fetchTodayData()
-    ]);
+  // 初始化加载所有核心数据
+  await Promise.all([
+    userStore.fetchUser(),
+    journalStore.fetchTodayData()
+  ]);
 });
 
 // 计算属性：从 Store 中提取数据
@@ -46,9 +46,9 @@ const handleIntakeSubmit = async (data: any) => {
     emoji: data.emoji,
     title: data.foodName,
     meta: {
-        amount: data.amount,
-        unit: data.unit,
-        mealType: data.mealType
+      amount: data.amount,
+      unit: data.unit,
+      mealType: data.mealType
     }
   });
   isIntakeOpen.value = false;
@@ -61,10 +61,10 @@ const handleExerciseSubmit = async (data: any) => {
     emoji: data.emoji,
     title: data.title || data.exerciseName,
     meta: {
-        amount: data.amount,
-        unit: data.unit,
-        category: data.category,
-        mood: data.mood
+      amount: data.amount,
+      unit: data.unit,
+      category: data.category,
+      mood: data.mood
     }
   });
   isExerciseOpen.value = false;
@@ -83,35 +83,18 @@ const handleResetDay = () => {
 
 <template>
   <Layout :currentView="currentView" @changeView="v => currentView = v" @openProfile="isProfileOpen = true">
-    <DashboardCards 
-      v-show="currentView === 'dashboard'"
-      :targetCalories="targetCalories"
-      :totalIntake="totalIntake"
-      :totalBurn="totalBurn"
-      @openIntake="isIntakeOpen = true"
-      @openExercise="isExerciseOpen = true"
-      @resetDay="handleResetDay"
-    />
+    <DashboardCards v-show="currentView === 'dashboard'" :targetCalories="targetCalories" :totalIntake="totalIntake"
+      :totalBurn="totalBurn" @openIntake="isIntakeOpen = true" @openExercise="isExerciseOpen = true"
+      @resetDay="handleResetDay" />
 
-    <JournalTimeline 
-        v-show="currentView === 'journal'" 
-        :entries="journalEntries" 
-        :totalIntake="totalIntake"
-        :totalBurn="totalBurn"
-        :targetCalories="targetCalories"
-        @date-change="handleDateChange"
-    />
+    <JournalTimeline v-show="currentView === 'journal'" :entries="journalEntries" :totalIntake="totalIntake"
+      :totalBurn="totalBurn" :targetCalories="targetCalories" @date-change="handleDateChange" />
 
     <template #modals>
       <IntakeModal :isOpen="isIntakeOpen" @close="isIntakeOpen = false" @submit="handleIntakeSubmit" />
       <ExerciseModal :isOpen="isExerciseOpen" @close="isExerciseOpen = false" @submit="handleExerciseSubmit" />
-      <ProfileModal 
-        v-if="userStore.user"
-        :isOpen="isProfileOpen" 
-        :initialData="userStore.user"
-        @close="isProfileOpen = false" 
-        @save="handleProfileSave" 
-      />
+      <ProfileModal v-if="userStore.user" :isOpen="isProfileOpen" :initialData="userStore.user"
+        @close="isProfileOpen = false" @save="handleProfileSave" />
     </template>
   </Layout>
 </template>

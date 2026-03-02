@@ -1,11 +1,29 @@
 export interface IUser {
-    id: string; // MVP: Hardcoded locally
+    id: string;
     nickname: string;
-    avatarId: number;
+    avatarId: string; // 修改为 string，因为后端下发的是 Emoji 或标识符
     height: number; // cm
     weight: number; // kg
     targetCalories: number; // kcal
     bmi: number;
+    gender: '男' | '女';
+    age: number;
+    activityLevel: number; // 1.2, 1.375, 1.55, 1.725, 1.9
+    bodyFat?: number; // %
+    bmr?: number; // kcal
+    level: number;
+    levelTitle: string;
+    measurements: {
+        chest?: number;
+        waist?: number;
+        hip?: number;
+        arm_left?: number;
+        arm_right?: number;
+        thigh_left?: number;
+        thigh_right?: number;
+        calf_left?: number;
+        calf_right?: number;
+    };
 }
 
 export type IntakeUnit = 'g' | '份';

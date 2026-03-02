@@ -1,6 +1,16 @@
 <script setup lang="ts">
+import { useUserStore } from '../../stores/user';
+const userStore = useUserStore();
+
 defineProps<{ currentView?: string }>();
 defineEmits(['openProfile', 'changeView']);
+
+// 格式化展示 UID (仅显示前后几位)
+const formatUid = (id: string) => {
+    if (!id) return '';
+    if (id === 'default-user-id') return 'Local';
+    return `ID: ${id.split('-')[0]}`;
+};
 </script>
 
 <template>
@@ -9,12 +19,11 @@ defineEmits(['openProfile', 'changeView']);
     <aside class="sidebar">
         <div class="user-brand" id="open-profile-btn" @click="$emit('openProfile')">
             <div class="brand-avatar">
-                <span class="emoji">🌿</span>
+                <span class="emoji">{{ userStore.user?.avatarId || '🌿' }}</span>
             </div>
             <div class="brand-info">
-                <h1>冒险者</h1>
-                <!-- TODO: global level/title state -->
-                <span class="brand-sub">LV.5 燃脂新手</span>
+                <h1>{{ userStore.user?.nickname || '冒险者' }}</h1>
+                <span class="brand-sub">{{ formatUid(userStore.user?.id || '') }}</span>
             </div>
         </div>
 
@@ -29,8 +38,9 @@ defineEmits(['openProfile', 'changeView']);
             </button>
         </nav>
 
-        <div class="user-profile" style="cursor: pointer;" @click="$emit('openProfile')">
-            <div class="user-streak">🔥 连续 5 天</div>
+        <div class="user-profile" style="cursor: pointer; flex-direction: column; gap: 4px; align-items: center;">
+            <div class="brand-sub" style="color: #FCE6DA; font-size: 11px;">LV.{{ userStore.user?.level || 1 }} {{ userStore.user?.levelTitle || '燃脂新手' }}</div>
+            <div class="user-streak">🔥 连续 1 天</div>
         </div>
     </aside>
 

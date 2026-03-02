@@ -4,8 +4,21 @@ const API_BASE = '/api'; // Vite proxy should be configured to point to localhos
 
 export const api = {
     // 1. 获取用户档案
-    async getUser(): Promise<IUser> {
-        const res = await fetch(`${API_BASE}/user`);
+    async getUser(id?: string): Promise<IUser> {
+        const url = id ? `${API_BASE}/user/${id}` : `${API_BASE}/user`;
+        const res = await fetch(url);
+        return res.json();
+    },
+
+    // 1.1 初始化匿名用户 [NEW]
+    async initUser(): Promise<IUser> {
+        const res = await fetch(`${API_BASE}/user/init`, { method: 'POST' });
+        return res.json();
+    },
+
+    // 1.2 获取头像列表 [NEW]
+    async getAvatars(): Promise<string[]> {
+        const res = await fetch(`${API_BASE}/avatars`);
         return res.json();
     },
 
