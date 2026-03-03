@@ -44,25 +44,18 @@ watch(() => props.isOpen, (next) => {
         activityLevel.value = props.initialData.activityLevel || 1.2;
         bodyFat.value = props.initialData.bodyFat || null;
 
-        // 同步围度
-        if (props.initialData.measurements) {
-            callouts.value = Object.entries(props.initialData.measurements).map(([id, val]) => {
-                const leftSides = ['arm_left', 'thigh_left', 'calf_left'];
-                const direction = leftSides.includes(id) ? 'direction-left' : 'direction-right';
-                const names: Record<string, string> = {
-                    chest: '胸围', waist: '腰围', hip: '臀围',
-                    arm_left: '左大臂', arm_right: '右大臂',
-                    thigh_left: '左大腿', thigh_right: '右大腿',
-                    calf_left: '左小腿', calf_right: '右小腿'
-                };
-                return { id, name: names[id] || id, value: val as number, direction };
-            });
-        }
+        // 同步围度到 measurements 对象
+        const m = props.initialData.measurements || {};
+        Object.keys(measurements.value).forEach(key => {
+            measurements.value[key] = (m as Record<string, number | undefined>)[key] != null
+                ? String((m as Record<string, number>)[key])
+                : '';
+        });
     }
 });
 
 // 右侧面板控制
-const rightPanelState = ref<'hidden' | 'avatar' | 'measurements' | 'profile_basic' | 'activity_level'>('hidden');
+const rightPanelState = ref<'hidden' | 'avatar' | 'measurements' | 'profile_basic' | 'activity_level' | 'calorie_gap'>('hidden');
 
 // 运动系数选项定义
 const activityOptions = [
@@ -119,11 +112,31 @@ const bmrValue = computed(() => {
         return Math.round(10 * weight.value + 6.25 * height.value - 5 * age.value - 161);
     }
 });
+// === TDEE 日常消耗 = BMR × 运动系数 ===
+const tdeeValue = computed(() => {
+    if (!bmrValue.value) return null;
+    return Math.round(bmrValue.value * activityLevel.value);
+});
+
+// 热量缺口等级表（5 级，合并相近项）
+const gapLevels = computed(() => {
+    const t = tdeeValue.value;
+    const r = (ratio: number) => t ? Math.abs(Math.round(t * ratio)) : '--';
+    return [
+        { level: '过量盈余', ratioLabel: '< -20%', range: t ? `> ${r(0.20)} kcal` : '--', effect: '脂肪增长明显', bg: 'rgba(70,70,70,0.10)' },
+        { level: '增肌', ratioLabel: '-20% ~ -5%', range: t ? `${r(0.05)} ~ ${r(0.20)} kcal` : '--', effect: '增肌，脂肪同步增加', bg: 'rgba(52,152,219,0.10)' },
+        { level: '维持', ratioLabel: '-5% ~ +5%', range: t ? `±${r(0.05)} kcal` : '--', effect: '体重基本稳定', bg: 'rgba(39,174,96,0.10)' },
+        { level: '减脂', ratioLabel: '+5% ~ +20%', range: t ? `${r(0.05)} ~ ${r(0.20)} kcal` : '--', effect: '每周0.25–1%体重下降', bg: 'rgba(241,196,15,0.14)' },
+        { level: '激进减脂', ratioLabel: '> +20%', range: t ? `> ${r(0.20)} kcal` : '--', effect: '肌肉流失风险高', bg: 'rgba(231,76,60,0.10)' },
+    ];
+});
 
 const saveProfile = () => {
-    const measurements: Record<string, number> = {};
-    callouts.value.forEach(c => {
-        measurements[c.id] = c.value;
+    const measurementData: Record<string, number> = {};
+    Object.entries(measurements.value).forEach(([id, v]) => {
+        if (v !== '' && !isNaN(Number(v)) && Number(v) > 0) {
+            measurementData[id] = Number(v);
+        }
     });
 
     emit('save', {
@@ -138,7 +151,7 @@ const saveProfile = () => {
         bodyFat: bodyFat.value,
         bmr: bmrValue.value || props.initialData.bmr,
         bmi: bmiData.value?.value || props.initialData.bmi,
-        measurements
+        measurements: measurementData
     });
     emit('close');
 };
@@ -148,58 +161,34 @@ const selectAvatar = (emoji: string) => {
     rightPanelState.value = 'hidden';
 };
 
-// === 身体围度互动 ===
-interface Callout {
-    id: string;
-    name: string;
-    value: number;
-    direction: string;
-}
-const callouts = ref<Callout[]>([]);
-const activeMeasure = ref<{ id: string, name: string } | null>(null);
-const measurePopoverStyle = ref({ top: '0px', left: '0px' });
-const measureInputValue = ref<number | null>(null);
-const isMeasurePopoverOpen = ref(false);
-
-const openMeasurePopover = (id: string, name: string, event: MouseEvent) => {
-    activeMeasure.value = { id, name };
-    measureInputValue.value = null;
-
-    const btn = event.currentTarget as HTMLElement;
-    const container = btn.closest('.human-figure-container') as HTMLElement;
-    if (btn && container) {
-        const btnRect = btn.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const top = btnRect.top - containerRect.top;
-        const left = btnRect.left - containerRect.left;
-        measurePopoverStyle.value = {
-            top: `${Math.max(0, top - 30)}px`,
-            left: `${left + 30}px`
-        };
-    }
-    isMeasurePopoverOpen.value = true;
+// === 身体围度 (直接输入) ===
+const MEASURE_NAMES: Record<string, string> = {
+    waist: '腰围', hip: '臀围',
+    arm_left: '左大臂', arm_right: '右大臂',
+    thigh_left: '左大腿', thigh_right: '右大腿',
+    calf_left: '左小腿', calf_right: '右小腿',
 };
+const LEFT_SIDES = ['arm_left', 'thigh_left', 'calf_left'];
 
-const confirmMeasure = () => {
-    if (activeMeasure.value && measureInputValue.value) {
-        const { id, name } = activeMeasure.value;
-        const leftSides = ['arm_left', 'thigh_left', 'calf_left'];
-        const direction = leftSides.includes(id) ? 'direction-left' : 'direction-right';
+const measurements = ref({
+    waist: '', hip: '',
+    arm_left: '', arm_right: '',
+    thigh_left: '', thigh_right: '',
+    calf_left: '', calf_right: '',
+} as Record<string, string>);
 
-        const existing = callouts.value.find(c => c.id === id);
-        if (existing) {
-            existing.value = measureInputValue.value;
-        } else {
-            callouts.value.push({ id, name, value: measureInputValue.value, direction });
-        }
-    }
-    isMeasurePopoverOpen.value = false;
-    activeMeasure.value = null;
-};
+// 根据有值的项自动生成引线 callout
+const callouts = computed(() =>
+    Object.entries(measurements.value)
+        .filter(([, v]) => v !== '' && !isNaN(Number(v)) && Number(v) > 0)
+        .map(([id, v]) => ({
+            id,
+            name: MEASURE_NAMES[id],
+            value: Number(v),
+            direction: LEFT_SIDES.includes(id) ? 'direction-left' : 'direction-right',
+        }))
+);
 
-const removeCallout = (id: string) => {
-    callouts.value = callouts.value.filter(c => c.id !== id);
-};
 </script>
 
 <template>
@@ -265,6 +254,21 @@ const removeCallout = (id: string) => {
                             <span class="expand-icon">▶</span>
                         </button>
                     </div>
+
+                    <!-- 日常消耗 突出卡片，底部对齐 -->
+                    <div class="tdee-card" :class="{ active: rightPanelState === 'calorie_gap' }"
+                        @click="rightPanelState = rightPanelState === 'calorie_gap' ? 'hidden' : 'calorie_gap'">
+                        <div class="tdee-left">
+                            <span class="tdee-label">🔥 日常消耗 (TDEE)</span>
+
+                            <span class="tdee-formula">BMR × {{ activityLevel }}</span>
+                        </div>
+                        <div class="tdee-value-row">
+                            <span class="tdee-number">{{ tdeeValue || '--' }}</span>
+                            <span class="tdee-unit">kcal/d</span>
+                        </div>
+                        <div class="tdee-right-arrow">▶</div>
+                    </div>
                 </div>
 
                 <!-- 右列：动态面板 -->
@@ -309,7 +313,7 @@ const removeCallout = (id: string) => {
                                 <span class="bmi-title">体质指数 (BMI)</span>
                                 <span class="bmi-value" :style="{ color: bmiData?.color || '#ccc' }">{{ bmiData?.value
                                     || '--'
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div class="bmi-bar">
                                 <div class="bmi-segment underweight" style="flex: 3.5"></div>
@@ -378,14 +382,15 @@ const removeCallout = (id: string) => {
                         </div>
                     </div>
 
-                    <!-- 围度录入 (原本的小人模型逻辑保持) -->
-                    <div class="right-panel-content no-vertical-scroll" v-show="rightPanelState === 'measurements'">
+                    <!-- 围度录入 -->
+                    <div class="right-panel-content" v-show="rightPanelState === 'measurements'">
                         <div class="panel-header-flex">
                             <h4>身材围度记录 🌱</h4>
                         </div>
+
+                        <!-- 小人模型 + 引线显示 -->
                         <div class="human-figure-container">
-                            <div class="humanoid-wrapper"
-                                @click.self="isMeasurePopoverOpen = false; activeMeasure = null">
+                            <div class="humanoid-wrapper">
                                 <div class="css-humanoid">
                                     <div class="human-head"></div>
                                     <div class="human-torso"></div>
@@ -394,34 +399,76 @@ const removeCallout = (id: string) => {
                                     <div class="human-leg left"></div>
                                     <div class="human-leg right"></div>
 
+                                    <!-- 有输入数据时显示引线 -->
                                     <div v-for="co in callouts" :key="co.id"
                                         :class="['data-callout', co.direction, `for-${co.id}`]">
                                         <div class="callout-line"></div>
-                                        <div class="callout-text">
-                                            {{ co.name }}: {{ co.value }}cm
-                                            <span class="callout-delete" @click="removeCallout(co.id)">×</span>
-                                        </div>
+                                        <div class="callout-text">{{ co.name }}: {{ co.value }}cm</div>
                                     </div>
-
-                                    <button v-for="p in [
-                                        { id: 'chest', name: '胸围' }, { id: 'waist', name: '腰围' }, { id: 'hip', name: '臀围' },
-                                        { id: 'arm_left', name: '左大臂' }, { id: 'arm_right', name: '右大臂' },
-                                        { id: 'thigh_left', name: '左大腿' }, { id: 'thigh_right', name: '右大腿' },
-                                        { id: 'calf_left', name: '左小腿' }, { id: 'calf_right', name: '右小腿' }
-                                    ]" :key="p.id"
-                                        :class="['measure-point', `point-${p.id}`, { active: activeMeasure?.id === p.id }]"
-                                        @click="openMeasurePopover(p.id, p.name, $event)"></button>
                                 </div>
                             </div>
-                            <div class="measure-input-popover" v-show="isMeasurePopoverOpen"
-                                :style="measurePopoverStyle">
-                                <label>{{ activeMeasure?.name }}</label>
-                                <div class="input-with-unit small">
-                                    <input type="number" class="styled-input" v-model="measureInputValue" step="0.1"
-                                        @keyup.enter="confirmMeasure">
+                        </div>
+
+                        <!-- 底部输入行 -->
+                        <div class="measure-input-grid">
+                            <div class="measure-input-row" v-for="item in [
+                                { id: 'waist', label: '腰', min: 50 }, { id: 'hip', label: '臀', min: 70 },
+                                { id: 'arm_left', label: '左臂', min: 15 }, { id: 'arm_right', label: '右臂', min: 15 },
+                                { id: 'thigh_left', label: '左大腿', min: 40 }, { id: 'thigh_right', label: '右大腿', min: 40 },
+                                { id: 'calf_left', label: '左小腿', min: 20 }, { id: 'calf_right', label: '右小腿', min: 20 }
+                            ]" :key="item.id">
+                                <span class="measure-row-label">{{ item.label }}</span>
+                                <div class="input-with-unit mini">
+                                    <input type="number" class="styled-input" v-model="measurements[item.id]" step="0.1"
+                                        :min="item.min" :placeholder="'-'">
                                     <span class="unit">cm</span>
                                 </div>
-                                <button class="popover-confirm-btn" @click="confirmMeasure">✔</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 热量缺口说明面板 -->
+                    <div class="right-panel-content" v-show="rightPanelState === 'calorie_gap'">
+                        <div class="panel-header-flex">
+                            <h4>🔥 热量缺口分析</h4>
+                        </div>
+                        <div class="calorie-gap-panel">
+                            <!-- 公式说明 -->
+                            <div class="gap-formula-block">
+                                <!-- 左侧：缺口结果 -->
+                                <div class="gap-formula-left">
+                                    <span class="formula-item primary">今日热量缺口</span>
+                                    <span class="gap-result-value"></span>
+                                </div>
+                                <!-- 左侧：缺口结果 -->
+                                <div class="gap-formula-center">
+                                    <span class="formula-op">=</span>
+                                </div>
+                                <!-- 右侧：公式 -->
+                                <div class="gap-formula-right">
+                                    <div class="gap-formula-row">
+                                        <span class="formula-item burn">日常消耗</span>
+                                        <span class="formula-op">+</span>
+                                        <span class="formula-item burn">运动消耗</span>
+                                    </div>
+                                    <div class="gap-formula-row">
+                                        <span class="formula-op">-</span>
+                                        <span class="formula-item intake">当日摄入</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 热量缺口等级 Tips -->
+                            <div class="gap-tips-table">
+                                <div class="gap-tips-header">缺口等级参考（基于 TDEE 占比）</div>
+                                <div class="gap-tips-item-wrapper" v-for="row in gapLevels" :key="row.level">
+                                    <div class="gap-tips-item" :style="{ background: row.bg }">
+                                        <span class="tips-level">{{ row.level }}</span>
+                                        <span class="tips-ratio">{{ row.ratioLabel }}</span>
+                                        <span class="tips-range">{{ row.range }}</span>
+                                    </div>
+                                    <div class="tips-desc">{{ row.effect }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -453,6 +500,8 @@ const removeCallout = (id: string) => {
     --modal-shadow: rgba(74, 78, 105, 0.15);
     --avatar-bg: #E8F5E9;
     --humanoid-skin: #b9b3af;
+    --color-light-green: #8FBB95;
+    --color-light-red: #ea8c8c;
 
     background: var(--modal-bg);
     width: 440px;
@@ -513,7 +562,9 @@ const removeCallout = (id: string) => {
 .modal-left-panel {
     width: 376px;
     flex-shrink: 0;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     padding-bottom: 20px;
 }
 
@@ -675,6 +726,7 @@ const removeCallout = (id: string) => {
 .right-panel-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible;
     display: flex;
     flex-direction: column;
 }
@@ -804,6 +856,242 @@ const removeCallout = (id: string) => {
     color: #888;
     margin-bottom: 2px;
     list-style-type: circle;
+}
+
+/* ===== TDEE 日常消耗卡片 ===== */
+.tdee-card {
+    margin-top: 12px;
+    margin-bottom: 0;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgb(241, 212, 193) 0%, rgb(235, 161, 161) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+.tdee-card:hover,
+.tdee-card.active {
+    background: linear-gradient(135deg, rgb(228, 170, 135) 0%, rgb(238, 116, 116) 100%);
+}
+
+.tdee-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tdee-label {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+.tdee-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.tdee-number {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.tdee-unit {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.tdee-formula {
+    font-size: 11px;
+    opacity: 0.65;
+}
+
+.tdee-right-arrow {
+    font-size: 14px;
+    opacity: 0.7;
+    transition: transform 0.2s;
+}
+
+.tdee-card.active .tdee-right-arrow {
+    transform: rotate(180deg);
+}
+
+/* ===== 热量缺口面板 ===== */
+.calorie-gap-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.gap-formula-block {
+    background: linear-gradient(135deg, rgba(200, 163, 201, 0.12) 0%, rgba(200, 163, 201, 0.06) 100%);
+    border: 1px solid var(--modal-border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* 左侧：缺口结果区 */
+.gap-formula-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 80px;
+}
+
+.gap-result-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--modal-secondary);
+    white-space: nowrap;
+}
+
+.gap-result-value {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--modal-text-main);
+    white-space: nowrap;
+}
+
+/* 右侧：公式行 */
+.gap-formula-right {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.gap-formula-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.formula-item {
+    background: white;
+    border: 1.5px solid var(--modal-border);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--modal-text-main);
+    white-space: nowrap;
+}
+
+.formula-item.primary {
+    background: var(--modal-primary);
+    color: white;
+    border-color: var(--modal-primary);
+}
+
+
+.formula-item.burn {
+    background: var(--color-light-green);
+    color: white;
+    border-color: transparent;
+}
+
+.formula-item.intake {
+    background: var(--color-light-red);
+    color: white;
+    border-color: transparent;
+}
+
+.formula-op {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--modal-primary);
+}
+
+.formula-op.minus {
+    color: #e74c3c;
+}
+
+/* ===== 热量缺口等级 Tips 表格 ===== */
+.gap-tips-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.gap-tips-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--modal-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* wrapper 负责 hover 触发，相对定位给 tips-desc 占位 */
+.gap-tips-item-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.gap-tips-item {
+    display: grid;
+    grid-template-columns: 60px 80px 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+
+/* 描述文字在边框外部下方，默认高度为 0 不占位，hover 时展开 */
+.tips-desc {
+    font-size: 10px;
+    color: #999999;
+    padding: 0 10px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease;
+    line-height: 1.5;
+}
+
+.gap-tips-item-wrapper:hover .tips-desc {
+    max-height: 32px;
+    opacity: 1;
+    padding: 2px 10px 4px;
+}
+
+.tips-level {
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.tips-ratio {
+    font-size: 10px;
+    color: var(--modal-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tips-range {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--modal-text-main);
+    white-space: nowrap;
 }
 
 /* BMI 指示器样式已存在，保持但做微调适配 */
@@ -1027,18 +1315,25 @@ const removeCallout = (id: string) => {
     pointer-events: none;
 }
 
-/* 原本的小人模型样式 (恢复旧版视觉) */
+/* 小人模型容器 */
 .human-figure-container {
     position: relative;
     width: 100%;
-    height: 400px;
+    height: 220px;
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0;
+    overflow: visible;
 }
 
 .humanoid-wrapper {
     transform: scale(1.1);
+    position: relative;
+    /* 给两侧引线足够空间 */
+    width: 260px;
+    display: flex;
+    justify-content: center;
 }
 
 .css-humanoid {
@@ -1052,18 +1347,20 @@ const removeCallout = (id: string) => {
 .human-head {
     width: 24px;
     height: 24px;
-    background: #FCE6DA;
+    background: var(--modal-primary);
+    opacity: 0.7;
     border-radius: 50%;
     position: absolute;
     top: 0;
     left: 18px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 6px rgba(200, 163, 201, 0.4);
 }
 
 .human-torso {
     width: 32px;
     height: 50px;
-    background: #FCE6DA;
+    background: var(--modal-primary);
+    opacity: 0.7;
     border-radius: 8px;
     position: absolute;
     top: 26px;
@@ -1073,7 +1370,8 @@ const removeCallout = (id: string) => {
 .human-arm {
     width: 10px;
     height: 45px;
-    background: #FCE6DA;
+    background: var(--modal-primary);
+    opacity: 0.6;
     border-radius: 5px;
     position: absolute;
     top: 28px;
@@ -1090,7 +1388,8 @@ const removeCallout = (id: string) => {
 .human-leg {
     width: 12px;
     height: 60px;
-    background: #FCE6DA;
+    background: var(--modal-primary);
+    opacity: 0.6;
     border-radius: 6px;
     position: absolute;
     top: 78px;
@@ -1104,23 +1403,47 @@ const removeCallout = (id: string) => {
     left: 33px;
 }
 
-.measure-point {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    background: #ffffff;
-    border: 2px solid #D4A373;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
-    transition: all 0.2s;
+/* 底部围度输入宫格 */
+.measure-input-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--modal-border);
+    flex-shrink: 0;
 }
 
-.measure-point:hover,
-.measure-point.active {
-    transform: scale(1.5);
-    background: #D4A373;
-    box-shadow: 0 0 8px rgba(212, 163, 115, 0.5);
+.measure-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.measure-row-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--modal-secondary);
+    white-space: nowrap;
+    min-width: 28px;
+}
+
+.input-with-unit.mini {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-unit.mini .styled-input {
+    width: 100%;
+    font-size: 12px;
+    padding: 4px 22px 4px 6px;
+    border-radius: 8px;
+}
+
+.input-with-unit.mini .unit {
+    font-size: 10px;
+    right: 4px;
 }
 
 .point-chest {
@@ -1168,7 +1491,6 @@ const removeCallout = (id: string) => {
     left: 32px;
 }
 
-/* Callout 样式 (恢复旧版连线) */
 .data-callout {
     position: absolute;
     display: flex;
@@ -1178,8 +1500,8 @@ const removeCallout = (id: string) => {
 
 .callout-line {
     height: 1.5px;
-    background: #D4A373;
-    width: 45px;
+    background: #d4738b;
+    width: 20px;
     opacity: 0.7;
     transform-origin: left center;
 }
@@ -1189,18 +1511,14 @@ const removeCallout = (id: string) => {
 }
 
 .callout-text {
-    background: white;
-    padding: 4px 8px;
-    border-radius: 8px;
-    border: 1px solid #D4A373;
     font-size: 11px;
     color: #4A4E69;
     font-weight: 700;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     display: flex;
-    align-items: center;
+    padding-left: 4px;
+    padding-right: 4px;
     gap: 4px;
-    pointer-events: auto;
+    white-space: nowrap;
 }
 
 .callout-delete {
@@ -1213,45 +1531,31 @@ const removeCallout = (id: string) => {
 .data-callout.direction-left {
     flex-direction: row-reverse;
     right: 50%;
-    margin-right: 40px;
+    margin-right: 20px;
 }
 
 .data-callout.direction-right {
     left: 50%;
-    margin-left: 40px;
+    margin-left: 20px;
 }
 
-/* 各部位独立定位与斜线旋转 */
-.for-chest {
-    top: 40px;
-}
-
-.for-chest .callout-line {
-    transform: rotate(-25deg);
-}
-
-.data-callout.direction-left.for-chest .callout-line {
-    transform: rotate(25deg);
-}
-
+/* 各部位独立定位，引线全部水平 */
 .for-waist {
-    top: 62px;
+    top: 50px;
 }
 
 .for-waist .callout-line {
-    transform: rotate(0deg);
+    transform: none;
+    width: 40px;
 }
 
 .for-hip {
-    top: 85px;
+    top: 75px;
 }
 
 .for-hip .callout-line {
-    transform: rotate(25deg);
-}
-
-.data-callout.direction-left.for-hip .callout-line {
-    transform: rotate(-25deg);
+    transform: none;
+    width: 30px;
 }
 
 .for-arm_left,
@@ -1260,43 +1564,43 @@ const removeCallout = (id: string) => {
 }
 
 .for-arm_left .callout-line {
-    transform: rotate(15deg);
-    width: 55px;
+    transform: none;
+    width: 30px;
 }
 
 .for-arm_right .callout-line {
-    transform: rotate(-15deg);
-    width: 55px;
+    transform: none;
+    width: 30px;
 }
 
 .for-thigh_left,
 .for-thigh_right {
-    top: 105px;
+    top: 90px;
 }
 
 .for-thigh_left .callout-line {
-    transform: rotate(-15deg);
-    width: 50px;
+    transform: none;
+    width: 30px;
 }
 
 .for-thigh_right .callout-line {
-    transform: rotate(15deg);
-    width: 50px;
+    transform: none;
+    width: 30px;
 }
 
 .for-calf_left,
 .for-calf_right {
-    top: 140px;
+    top: 110px;
 }
 
 .for-calf_left .callout-line {
-    transform: rotate(-35deg);
-    width: 60px;
+    transform: none;
+    width: 30px;
 }
 
 .for-calf_right .callout-line {
-    transform: rotate(35deg);
-    width: 60px;
+    transform: none;
+    width: 30px;
 }
 
 .measure-input-popover {
