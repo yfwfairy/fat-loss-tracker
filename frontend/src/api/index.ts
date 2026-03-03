@@ -1,4 +1,4 @@
-import type { JournalEntry, IUser } from '@fat-loss-tracker/shared-types';
+import type { JournalEntry, IUser, IFoodItem, IExerciseCategory } from '@fat-loss-tracker/shared-types';
 
 const API_BASE = '/api'; // Vite proxy should be configured to point to localhost:3000
 
@@ -16,9 +16,21 @@ export const api = {
         return res.json();
     },
 
-    // 1.2 获取头像列表 [NEW]
+    // 1.2 获取头像列表
     async getAvatars(): Promise<string[]> {
         const res = await fetch(`${API_BASE}/avatars`);
+        return res.json();
+    },
+
+    // 1.3 获取食物列表
+    async getFoods(): Promise<IFoodItem[]> {
+        const res = await fetch(`${API_BASE}/foods`);
+        return res.json();
+    },
+
+    // 1.4 获取运动列表
+    async getExercises(): Promise<IExerciseCategory> {
+        const res = await fetch(`${API_BASE}/exercises`);
         return res.json();
     },
 

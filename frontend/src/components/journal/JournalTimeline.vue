@@ -3,17 +3,17 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { JournalEntry } from '@fat-loss-tracker/shared-types';
 
 const props = defineProps<{
-  entries: JournalEntry[];
-  totalIntake: number;
-  totalBurn: number;
-  targetCalories: number;
+    entries: JournalEntry[];
+    totalIntake: number;
+    totalBurn: number;
+    targetCalories: number;
 }>();
 
 const emit = defineEmits(['date-change']);
 
 const formatTime = (ts: string) => {
-  const d = new Date(ts);
-  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    const d = new Date(ts);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 };
 
 const getDesc = (entry: any) => {
@@ -28,14 +28,15 @@ const getDesc = (entry: any) => {
         const sport = entry.title || '运动';
         const mood = entry.mood || '😄';
         const bowls = (entry.calories / 200).toFixed(1);
-        
+
         // 如果是自定义运动 (amount 为 0 或 负数)，不显示时长
         const durationText = (amount > 0) ? `${amount}${unit}` : '';
         return `${mood} 今日${sport}${durationText} 相当于消耗了 🍚 ${bowls} 碗米`;
     }
 };
 
-const totalCapacity = computed(() => props.targetCalories + Math.max(0, props.totalBurn - 1800)); // derived from dashboard logic
+// TDEE（targetCalories）+ 运动消耗，与 DashboardCards 保持一致
+const totalCapacity = computed(() => props.targetCalories + props.totalBurn);
 
 const ringStyle = computed(() => {
     const intakeRatio = Math.min(1, props.totalIntake / totalCapacity.value);
@@ -59,69 +60,69 @@ const todayDateString = computed(() => {
 });
 
 const tabDayLabel = computed(() => {
-  const d = selectedDate.value;
-  const today = new Date();
-  const isToday = d.getDate() === today.getDate() &&
-                  d.getMonth() === today.getMonth() &&
-                  d.getFullYear() === today.getFullYear();
-  return isToday ? "今天" : `${d.getMonth() + 1}月${d.getDate()}日`;
+    const d = selectedDate.value;
+    const today = new Date();
+    const isToday = d.getDate() === today.getDate() &&
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear();
+    return isToday ? "今天" : `${d.getMonth() + 1}月${d.getDate()}日`;
 });
 
 const tabMonthLabel = computed(() => {
-  return `${selectedDate.value.getMonth() + 1}月`;
+    return `${selectedDate.value.getMonth() + 1}月`;
 });
 
 // 日历网格计算
 const dateGrid = computed(() => {
-  const grid = [];
-  const firstDay = new Date(displayYear.value, displayMonth.value, 1).getDay();
-  const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+    const grid = [];
+    const firstDay = new Date(displayYear.value, displayMonth.value, 1).getDay();
+    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
 
-  const daysInMonth = new Date(displayYear.value, displayMonth.value + 1, 0).getDate();
-  const daysInPrevMonth = new Date(displayYear.value, displayMonth.value, 0).getDate();
+    const daysInMonth = new Date(displayYear.value, displayMonth.value + 1, 0).getDate();
+    const daysInPrevMonth = new Date(displayYear.value, displayMonth.value, 0).getDate();
 
-  // 上月余数
-  for (let i = adjustedFirstDay - 1; i >= 0; i--) {
-    grid.push({
-      day: daysInPrevMonth - i,
-      monthOffset: -1,
-      isCurrentMonth: false
-    });
-  }
+    // 上月余数
+    for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+        grid.push({
+            day: daysInPrevMonth - i,
+            monthOffset: -1,
+            isCurrentMonth: false
+        });
+    }
 
-  // 本月主日期
-  const today = new Date();
-  for (let i = 1; i <= daysInMonth; i++) {
-    grid.push({
-      day: i,
-      monthOffset: 0,
-      isCurrentMonth: true,
-      isToday: i === today.getDate() && displayMonth.value === today.getMonth() && displayYear.value === today.getFullYear(),
-      isSelected: i === selectedDate.value.getDate() && displayMonth.value === selectedDate.value.getMonth() && displayYear.value === selectedDate.value.getFullYear()
-    });
-  }
+    // 本月主日期
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        grid.push({
+            day: i,
+            monthOffset: 0,
+            isCurrentMonth: true,
+            isToday: i === today.getDate() && displayMonth.value === today.getMonth() && displayYear.value === today.getFullYear(),
+            isSelected: i === selectedDate.value.getDate() && displayMonth.value === selectedDate.value.getMonth() && displayYear.value === selectedDate.value.getFullYear()
+        });
+    }
 
-  // 下月填充
-  const remaining = 42 - grid.length;
-  for (let i = 1; i <= remaining; i++) {
-    grid.push({
-      day: i,
-      monthOffset: 1,
-      isCurrentMonth: false
-    });
-  }
-  return grid;
+    // 下月填充
+    const remaining = 42 - grid.length;
+    for (let i = 1; i <= remaining; i++) {
+        grid.push({
+            day: i,
+            monthOffset: 1,
+            isCurrentMonth: false
+        });
+    }
+    return grid;
 });
 
 const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"];
 const monthGrid = computed(() => {
-  const today = new Date();
-  return monthNames.map((name, i) => ({
-    name,
-    index: i,
-    isCurrentMonth: i === today.getMonth() && displayYear.value === today.getFullYear(),
-    isSelected: i === selectedDate.value.getMonth() && displayYear.value === selectedDate.value.getFullYear()
-  }));
+    const today = new Date();
+    return monthNames.map((name, i) => ({
+        name,
+        index: i,
+        isCurrentMonth: i === today.getMonth() && displayYear.value === today.getFullYear(),
+        isSelected: i === selectedDate.value.getMonth() && displayYear.value === selectedDate.value.getFullYear()
+    }));
 });
 
 // 方法集
@@ -146,7 +147,7 @@ const selectDate = (cell: any) => {
     let targetYear = displayYear.value;
     if (targetMonth < 0) { targetMonth = 11; targetYear--; }
     if (targetMonth > 11) { targetMonth = 0; targetYear++; }
-    
+
     selectedDate.value = new Date(targetYear, targetMonth, cell.day);
     isDatePickerOpen.value = false;
     isMonthView.value = false;
@@ -209,111 +210,116 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="view-container" id="view-journal">
-      <!-- 顶部日期与热量环 -->
-      <header class="journal-header">
-          <div class="journal-date-info">
-              <h2 class="huge-date" @click.stop="toggleDatePicker">
-                  <span id="journal-date-text">{{ todayDateString }}</span>
-                  <div class="date-icon-wrapper">
-                      <span class="calendar-icon">📅</span>
-                  </div>
-              </h2>
-              <div class="date-subtitle">生活饮食记录</div>
+    <div class="view-container" id="view-journal">
+        <!-- 顶部日期与热量环 -->
+        <header class="journal-header">
+            <div class="journal-date-info">
+                <h2 class="huge-date" @click.stop="toggleDatePicker">
+                    <span id="journal-date-text">{{ todayDateString }}</span>
+                    <div class="date-icon-wrapper">
+                        <span class="calendar-icon">📅</span>
+                    </div>
+                </h2>
+                <div class="date-subtitle">生活饮食记录</div>
 
-              <!-- 视图切换控件 Tabs -->
-              <div class="view-tabs-group" style="position: relative;">
-                  <button class="view-tab" :class="{ active: !isMonthView }" id="tab-day-view" @click.stop="toggleDatePicker">
-                      <span class="nav-arrow" id="nav-prev-day" @click.stop="goPrevDay">‹</span>
-                      <span class="tab-label">{{ tabDayLabel }}</span>
-                      <span class="nav-arrow" id="nav-next-day" @click.stop="goNextDay">›</span>
-                  </button>
-                  <button class="view-tab" :class="{ active: isMonthView }" id="tab-month-view" @click.stop="toggleMonthPicker">
-                      <span class="tab-icon">📅</span>
-                      <span class="tab-label">{{ isMonthView ? tabMonthLabel : '月历' }}</span>
-                  </button>
+                <!-- 视图切换控件 Tabs -->
+                <div class="view-tabs-group" style="position: relative;">
+                    <button class="view-tab" :class="{ active: !isMonthView }" id="tab-day-view"
+                        @click.stop="toggleDatePicker">
+                        <span class="nav-arrow" id="nav-prev-day" @click.stop="goPrevDay">‹</span>
+                        <span class="tab-label">{{ tabDayLabel }}</span>
+                        <span class="nav-arrow" id="nav-next-day" @click.stop="goNextDay">›</span>
+                    </button>
+                    <button class="view-tab" :class="{ active: isMonthView }" id="tab-month-view"
+                        @click.stop="toggleMonthPicker">
+                        <span class="tab-icon">📅</span>
+                        <span class="tab-label">{{ isMonthView ? tabMonthLabel : '月历' }}</span>
+                    </button>
 
-                  <!-- Date Picker Popover -->
-                  <div v-if="isDatePickerOpen" class="custom-picker-popover" style="top: 50px; left: 0;" @click.stop>
-                      <div class="picker-header">
-                          <button class="picker-nav-btn" @click="changeYear(-1)">«</button>
-                          <button class="picker-nav-btn" @click="changeMonth(-1)">‹</button>
-                          <div class="picker-current-view" @click="setToday">{{ displayYear }} 年 {{ displayMonth + 1 }} 月</div>
-                          <button class="picker-nav-btn" @click="changeMonth(1)">›</button>
-                          <button class="picker-nav-btn" @click="changeYear(1)">»</button>
-                      </div>
-                      <div class="picker-weekdays">
-                          <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-                      </div>
-                      <div class="picker-days-grid">
-                          <div v-for="(cell, idx) in dateGrid" :key="idx" 
-                               class="picker-cell" 
-                               :class="{ 'not-current-month': !cell.isCurrentMonth, 'is-today': cell.isToday, 'selected': cell.isSelected }"
-                               @click="selectDate(cell)">
-                              {{ cell.day }}
-                          </div>
-                      </div>
-                  </div>
+                    <!-- Date Picker Popover -->
+                    <div v-if="isDatePickerOpen" class="custom-picker-popover" style="top: 50px; left: 0;" @click.stop>
+                        <div class="picker-header">
+                            <button class="picker-nav-btn" @click="changeYear(-1)">«</button>
+                            <button class="picker-nav-btn" @click="changeMonth(-1)">‹</button>
+                            <div class="picker-current-view" @click="setToday">{{ displayYear }} 年 {{ displayMonth + 1
+                                }} 月</div>
+                            <button class="picker-nav-btn" @click="changeMonth(1)">›</button>
+                            <button class="picker-nav-btn" @click="changeYear(1)">»</button>
+                        </div>
+                        <div class="picker-weekdays">
+                            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                        </div>
+                        <div class="picker-days-grid">
+                            <div v-for="(cell, idx) in dateGrid" :key="idx" class="picker-cell"
+                                :class="{ 'not-current-month': !cell.isCurrentMonth, 'is-today': cell.isToday, 'selected': cell.isSelected }"
+                                @click="selectDate(cell)">
+                                {{ cell.day }}
+                            </div>
+                        </div>
+                    </div>
 
-                  <!-- Month Picker Popover -->
-                  <div v-if="isMonthPickerOpen" class="custom-picker-popover" style="top: 50px; left: 100px;" @click.stop>
-                      <div class="picker-header">
-                          <button class="picker-nav-btn" @click="changeYear(-1)">«</button>
-                          <div class="picker-current-view" @click="setToday">{{ displayYear }} 年</div>
-                          <button class="picker-nav-btn" @click="changeYear(1)">»</button>
-                      </div>
-                      <div class="picker-months-grid">
-                          <div v-for="(m, idx) in monthGrid" :key="idx"
-                               class="picker-month-cell"
-                               :class="{ 'is-today': m.isCurrentMonth, 'selected': m.isSelected }"
-                               @click="selectMonth(m.index)">
-                              {{ m.name }}
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
+                    <!-- Month Picker Popover -->
+                    <div v-if="isMonthPickerOpen" class="custom-picker-popover" style="top: 50px; left: 100px;"
+                        @click.stop>
+                        <div class="picker-header">
+                            <button class="picker-nav-btn" @click="changeYear(-1)">«</button>
+                            <div class="picker-current-view" @click="setToday">{{ displayYear }} 年</div>
+                            <button class="picker-nav-btn" @click="changeYear(1)">»</button>
+                        </div>
+                        <div class="picker-months-grid">
+                            <div v-for="(m, idx) in monthGrid" :key="idx" class="picker-month-cell"
+                                :class="{ 'is-today': m.isCurrentMonth, 'selected': m.isSelected }"
+                                @click="selectMonth(m.index)">
+                                {{ m.name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-          <div class="daily-calorie-ring" :style="ringStyle">
-              <div class="ring-circle">
-                  <div class="ring-text">
-                      <span class="ring-num" id="journalRingNum">{{ Math.round(totalCapacity) }}</span>
-                      <span class="ring-label">kcal</span>
-                  </div>
-              </div>
-          </div>
-      </header>
+            <div class="daily-calorie-ring" :style="ringStyle">
+                <div class="ring-circle">
+                    <div class="ring-text">
+                        <span class="ring-num" id="journalRingNum">{{ Math.round(totalCapacity) }}</span>
+                        <span class="ring-label">kcal</span>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-      <div class="journal-content-wrapper">
-          <!-- 日视图：时间轴 -->
-          <div class="journal-timeline active-view" id="journalTimeline" :class="{ 'has-entries': entries.length > 0 }">
-              <!-- 动态内容由此渲染 -->
-              <div class="journal-placeholder" id="journalPlaceholder" :style="{ display: entries.length === 0 ? 'flex' : 'none' }">
-                  <span style="font-size: 64px; margin-bottom: 16px;">📭</span>
-                  <p>开始今天的记录吧～</p>
-              </div>
+        <div class="journal-content-wrapper">
+            <!-- 日视图：时间轴 -->
+            <div class="journal-timeline active-view" id="journalTimeline"
+                :class="{ 'has-entries': entries.length > 0 }">
+                <!-- 动态内容由此渲染 -->
+                <div class="journal-placeholder" id="journalPlaceholder"
+                    :style="{ display: entries.length === 0 ? 'flex' : 'none' }">
+                    <span style="font-size: 64px; margin-bottom: 16px;">📭</span>
+                    <p>开始今天的记录吧～</p>
+                </div>
 
-              <div v-for="entry in entries" :key="entry.id" class="timeline-item" :class="'entry-' + entry.type">
-                  <div class="time-marker">
-                      <span class="time">{{ formatTime(entry.timestamp) }}</span>
-                      <span class="dot"></span>
-                  </div>
-                  <div class="timeline-content">
-                      <div class="timeline-icon-box">
-                          {{ entry.emoji }}
-                      </div>
-                      <div class="meal-info">
-                          <div class="timeline-title-row">
-                              <span class="timeline-title">{{ entry.title }}</span>
-                              <span class="timeline-cal">{{ entry.type === 'intake' ? '+' : '-' }}{{ entry.calories }} kcal</span>
-                          </div>
-                          <p class="timeline-desc">{{ getDesc(entry) }}</p>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
+                <div v-for="entry in entries" :key="entry.id" class="timeline-item" :class="'entry-' + entry.type">
+                    <div class="time-marker">
+                        <span class="time">{{ formatTime(entry.timestamp) }}</span>
+                        <span class="dot"></span>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-icon-box">
+                            {{ entry.emoji }}
+                        </div>
+                        <div class="meal-info">
+                            <div class="timeline-title-row">
+                                <span class="timeline-title">{{ entry.title }}</span>
+                                <span class="timeline-cal">{{ entry.type === 'intake' ? '+' : '-' }}{{ entry.calories }}
+                                    kcal</span>
+                            </div>
+                            <p class="timeline-desc">{{ getDesc(entry) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -931,6 +937,4 @@ onUnmounted(() => {
     background: var(--color-accent);
     color: white;
 }
-
-
 </style>

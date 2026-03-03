@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import CustomSelect from '../ui/CustomSelect.vue';
-import type { IntakeUnit } from '@fat-loss-tracker/shared-types';
+import type { IntakeUnit, IFoodItem } from '@fat-loss-tracker/shared-types';
+import { api } from '../../api';
 
 const props = defineProps<{
-  isOpen: boolean;
+    isOpen: boolean;
 }>();
 
 const emit = defineEmits(['close', 'submit']);
@@ -17,86 +18,93 @@ const mealType = ref('午餐'); // default mock
 const isEmojiPopoverOpen = ref(false);
 const selectedEmoji = ref('❓');
 
-// Mock 食物列表数据 (后续由服务端下发)
-const mockFoods = [
-  { name: '汉堡', icon: '🍔', calories: 250 },
-  { name: '薯条', icon: '🍟', calories: 310 },
-  { name: '比萨', icon: '🍕', calories: 260 },
-  { name: '梨子', icon: '🍐', calories: 50 },
-  { name: '面包', icon: '🍞', calories: 280 },
-  { name: '鸡腿', icon: '🍗', calories: 220 },
-  { name: '沙拉', icon: '🥗', calories: 40 },
-  { name: '苹果', icon: '🍎', calories: 52 },
-  { name: '蛋糕', icon: '🍰', calories: 350 },
-  { name: '拉面', icon: '🍜', calories: 120 },
-  { name: '煎蛋', icon: '🍳', calories: 155 },
-  { name: '牛奶', icon: '🥛', calories: 60 },
-  { name: '草莓', icon: '🍓', calories: 32 },
-  { name: '牛油果', icon: '🥑', calories: 160 },
-  { name: '烤肉', icon: '🍖', calories: 240 }
-];
+// 从后端拉取的食物列表
+const foodList = ref<IFoodItem[]>([]);
+const isLoadingFoods = ref(false);
 
-const currentCaloriesPer100g = ref(150); // 默认 150
+onMounted(async () => {
+    isLoadingFoods.value = true;
+    try {
+        foodList.value = await api.getFoods();
+    } catch (e) {
+        console.error('[IntakeModal] Failed to fetch foods:', e);
+    } finally {
+        isLoadingFoods.value = false;
+    }
+});
 
-const selectFood = (food: { name: string, icon: string, calories: number }) => {
-  foodName.value = food.name;
-  selectedEmoji.value = food.icon;
-  currentCaloriesPer100g.value = food.calories;
-  isEmojiPopoverOpen.value = false;
-  errors.value = errors.value.filter(e => e !== 'foodName');
+// 当前选中的食物（完整对象，含两种卡路里字段）
+const selectedFood = ref<IFoodItem | null>(null);
+
+const selectFood = (food: IFoodItem) => {
+    foodName.value = food.name;
+    selectedEmoji.value = food.icon;
+    selectedFood.value = food;
+    isEmojiPopoverOpen.value = false;
+    errors.value = errors.value.filter(e => e !== 'foodName');
 };
 
 const resetToCustom = () => {
-  selectedEmoji.value = '🍽️';
-  isEmojiPopoverOpen.value = false;
+    selectedEmoji.value = '🍽️';
+    selectedFood.value = null;
+    isEmojiPopoverOpen.value = false;
 };
 
+// 未对应列表食物时为自定义模式
+const isCustomMode = computed(() => selectedFood.value === null);
+
 const calculatedCalories = computed(() => {
-  if (!inputAmount.value) return 0;
-  if (unit.value === 'g') {
-    return Math.round((inputAmount.value / 100) * currentCaloriesPer100g.value);
-  } else {
-    return Math.round(inputAmount.value * currentCaloriesPer100g.value);
-  }
+    if (!inputAmount.value) return 0;
+    // 自定义模式：直接输入 kcal
+    if (isCustomMode.value) return inputAmount.value;
+    if (unit.value === 'g') {
+        // 按克重：摄入量 / 100 × caloriesPer100g
+        const rate = selectedFood.value?.caloriesPer100g ?? 150;
+        return Math.round((inputAmount.value / 100) * rate);
+    } else {
+        // 按份：份数 × caloriesPerServing
+        const rate = selectedFood.value?.caloriesPerServing ?? 200;
+        return Math.round(inputAmount.value * rate);
+    }
 });
 
 const errors = ref<string[]>([]);
 
 const submit = () => {
-  errors.value = [];
-  if (!foodName.value) errors.value.push('foodName');
-  if (!inputAmount.value || inputAmount.value <= 0) errors.value.push('amount');
-
-  if (errors.value.length > 0) return;
-
-  emit('submit', {
-    type: 'intake',
-    foodName: foodName.value,
-    amount: inputAmount.value,
-    unit: unit.value,
-    mealType: mealType.value,
-    calories: calculatedCalories.value,
-    emoji: selectedEmoji.value === '❓' ? '🍽️' : selectedEmoji.value
-  });
-  foodName.value = '';
-  inputAmount.value = null;
-  selectedEmoji.value = '❓';
-  emit('close');
-};
-
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
     errors.value = [];
+    if (!foodName.value) errors.value.push('foodName');
+    if (!inputAmount.value || inputAmount.value <= 0) errors.value.push('amount');
+
+    if (errors.value.length > 0) return;
+
+    emit('submit', {
+        type: 'intake',
+        foodName: foodName.value,
+        amount: inputAmount.value,
+        unit: unit.value,
+        mealType: mealType.value,
+        calories: calculatedCalories.value,
+        emoji: selectedEmoji.value === '❓' ? '🍽️' : selectedEmoji.value
+    });
     foodName.value = '';
     inputAmount.value = null;
     selectedEmoji.value = '❓';
-    currentCaloriesPer100g.value = 150;
-  }
+    emit('close');
+};
+
+watch(() => props.isOpen, (newVal) => {
+    if (newVal) {
+        errors.value = [];
+        foodName.value = '';
+        inputAmount.value = null;
+        selectedEmoji.value = '❓';
+        selectedFood.value = null;
+    }
 });
 </script>
 
 <template>
-  <div class="modal-overlay" :class="{ hidden: !isOpen }" @click.self="emit('close')">
+    <div class="modal-overlay" :class="{ hidden: !isOpen }" @click.self="emit('close')">
         <div class="profile-settings-modal log-modal">
             <header class="modal-header">
                 <h3>🍞 记摄入</h3>
@@ -111,20 +119,25 @@ watch(() => props.isOpen, (newVal) => {
                         <label class="input-label">🍳 食物名称</label>
                         <div class="food-input-wrapper">
                             <div class="emoji-picker-container" style="position: relative;">
-                                <button class="food-emoji-btn" title="选择分类图标" @click="isEmojiPopoverOpen = !isEmojiPopoverOpen">{{ selectedEmoji }}</button>
-                                
+                                <button class="food-emoji-btn" title="选择分类图标"
+                                    @click="isEmojiPopoverOpen = !isEmojiPopoverOpen">{{ selectedEmoji }}</button>
+
                                 <!-- Emoji 选择浮窗 -->
                                 <div class="emoji-popover" :class="{ hidden: !isEmojiPopoverOpen }">
                                     <div class="emoji-grid">
                                         <span class="custom-emoji-btn" title="自定义" @click="resetToCustom">➕</span>
-                                        <span v-for="food in mockFoods" :key="food.name" @click="selectFood(food)">
+                                        <span v-if="isLoadingFoods"
+                                            style="grid-column: span 4; text-align:center; font-size:13px; color: #aaa;">加载中...</span>
+                                        <span v-for="food in foodList" :key="food.name" @click="selectFood(food)">
                                             {{ food.icon }}
                                         </span>
                                     </div>
                                     <div class="popover-arrow"></div>
                                 </div>
                             </div>
-                            <input type="text" v-model="foodName" class="styled-input" :class="{ 'input-error': errors.includes('foodName') }" placeholder="例如：燕麦片、鸡胸肉..." @input="errors = errors.filter(e => e !== 'foodName')">
+                            <input type="text" v-model="foodName" class="styled-input"
+                                :class="{ 'input-error': errors.includes('foodName') }" placeholder="例如：燕麦片、鸡胸肉..."
+                                @input="errors = errors.filter(e => e !== 'foodName')">
                         </div>
                     </div>
 
@@ -132,11 +145,16 @@ watch(() => props.isOpen, (newVal) => {
                     <div class="input-group">
                         <label class="input-label">⚖️ 摄入量</label>
                         <div class="input-with-unit-group" style="display: flex; gap: 8px;">
-                            <input type="number" v-model="inputAmount" class="styled-input" :class="{ 'input-error': errors.includes('amount') }" placeholder="输入数值" min="1" step="1" style="flex: 1;" @input="errors = errors.filter(e => e !== 'amount')">
-                            <div class="custom-select-wrapper" style="width: 80px;">
-                                    <CustomSelect 
-                                       :options="[{value: 'g', label: '克'}, {value: '份', label: '份'}]"  v-model="unit" 
-                                    />
+                            <input type="number" v-model="inputAmount" class="styled-input"
+                                :class="{ 'input-error': errors.includes('amount') }"
+                                :placeholder="isCustomMode ? '请直接输入 kcal' : '输入数值'" min="1" step="1" style="flex: 1;"
+                                @input="errors = errors.filter(e => e !== 'amount')">
+                            <!-- 自定义模式：显示静态 kcal 标签 -->
+                            <div v-if="isCustomMode" class="unit-kcal-badge">kcal</div>
+                            <!-- 已选食物：显示单位切换 -->
+                            <div v-else class="custom-select-wrapper" style="width: 80px;">
+                                <CustomSelect :options="[{ value: 'g', label: '克' }, { value: '份', label: '份' }]"
+                                    v-model="unit" />
                             </div>
                         </div>
                     </div>
@@ -144,10 +162,14 @@ watch(() => props.isOpen, (newVal) => {
                     <div class="input-group">
                         <label class="input-label">🍽️ 用餐时间</label>
                         <div class="meal-selector">
-                            <button class="meal-btn" :class="{ active: mealType === '早餐' }" @click="mealType = '早餐'">早餐</button>
-                            <button class="meal-btn" :class="{ active: mealType === '午餐' }" @click="mealType = '午餐'">午餐</button>
-                            <button class="meal-btn" :class="{ active: mealType === '晚餐' }" @click="mealType = '晚餐'">晚餐</button>
-                            <button class="meal-btn" :class="{ active: mealType === '加餐' }" @click="mealType = '加餐'">加餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '早餐' }"
+                                @click="mealType = '早餐'">早餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '午餐' }"
+                                @click="mealType = '午餐'">午餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '晚餐' }"
+                                @click="mealType = '晚餐'">晚餐</button>
+                            <button class="meal-btn" :class="{ active: mealType === '加餐' }"
+                                @click="mealType = '加餐'">加餐</button>
                         </div>
                     </div>
 
@@ -210,11 +232,10 @@ watch(() => props.isOpen, (newVal) => {
                 <button class="btn-primary" @click="submit">确认记录</button>
             </footer>
         </div>
-  </div>
+    </div>
 </template>
 
 <style scoped>
-
 /* 分栏布局 */
 .log-modal-body-split {
     display: flex;
@@ -343,6 +364,23 @@ watch(() => props.isOpen, (newVal) => {
 
 .input-with-unit-group .styled-input {
     flex: 1;
+}
+
+/* 自定义模式下的 kcal 静态标签 */
+.unit-kcal-badge {
+    width: 80px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F8F9FA;
+    border: 1px solid rgba(241, 225, 250, 0.75);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-accent);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
 /* 单位切换 Toggle */
@@ -489,5 +527,4 @@ watch(() => props.isOpen, (newVal) => {
     padding: 3px 8px;
     border-radius: 8px;
 }
-
 </style>

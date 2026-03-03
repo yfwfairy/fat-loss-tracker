@@ -83,7 +83,7 @@ app.post('/api/user/init', (req, res) => {
         $age: 25,
         $height: 175,
         $weight: 70,
-        $target_calories: 2000,
+        $target_calories: 1800,
         $bmi: 22.8,
         $activity_level: 1.2,
         $body_fat: null,
@@ -106,7 +106,7 @@ app.post('/api/user/init', (req, res) => {
         age: 25,
         height: 175,
         weight: 70,
-        targetCalories: 2000,
+        targetCalories: 1800,
         bmi: 22.8,
         activityLevel: 1.2,
         bodyFat: null,
@@ -117,10 +117,83 @@ app.post('/api/user/init', (req, res) => {
     });
 });
 
-// 2.2 Get Avatars [NEW]
+// 2.2 Get Avatars
 app.get('/api/avatars', (req, res) => {
     const avatars = ['🍄', '🐢', '🌟', '👑', '👻', '🦖', '🌰', '🌸', '☁️', '🔥', '🦊', '🧚', '🌞', '🌙', '⭐', '🍎', '🍉', '🍇', '🐶', '🐱', '🐭', '🦄', '🐧', '🐸'];
     res.json(avatars);
+});
+
+// 2.3 Get Food List
+app.get('/api/foods', (req, res) => {
+    const foods = [
+        { name: '汉堡', icon: '🍔', caloriesPer100g: 250, caloriesPerServing: 450 },   // 1个≈180g
+        { name: '薯条', icon: '🍟', caloriesPer100g: 310, caloriesPerServing: 220 },   // 中份≈70g
+        { name: '比萨', icon: '🍕', caloriesPer100g: 260, caloriesPerServing: 300 },   // 1片≈115g
+        { name: '梨子', icon: '🍐', caloriesPer100g: 50, caloriesPerServing: 90 },    // 1个≈180g
+        { name: '面包', icon: '🍞', caloriesPer100g: 280, caloriesPerServing: 70 },    // 1片≈25g
+        { name: '鸡腿', icon: '🍗', caloriesPer100g: 220, caloriesPerServing: 260 },   // 1个≈120g
+        { name: '沙拉', icon: '🥗', caloriesPer100g: 40, caloriesPerServing: 80 },    // 1份≈200g
+        { name: '苹果', icon: '🍎', caloriesPer100g: 52, caloriesPerServing: 80 },    // 1个≈150g
+        { name: '蛋糕', icon: '🍰', caloriesPer100g: 350, caloriesPerServing: 280 },   // 1块≈80g
+        { name: '拉面', icon: '🍜', caloriesPer100g: 120, caloriesPerServing: 480 },   // 1碗≈400g
+        { name: '煎蛋', icon: '🍳', caloriesPer100g: 155, caloriesPerServing: 90 },    // 1个≈60g
+        { name: '牛奶', icon: '🥛', caloriesPer100g: 60, caloriesPerServing: 150 },   // 1杯≈250g
+        { name: '草莓', icon: '🍓', caloriesPer100g: 32, caloriesPerServing: 50 },    // 1把≈150g
+        { name: '牛油果', icon: '🥑', caloriesPer100g: 160, caloriesPerServing: 240 }, // 1个≈150g
+        { name: '烤肉', icon: '🍖', caloriesPer100g: 240, caloriesPerServing: 360 },   // 1份≈150g
+    ];
+    res.json(foods);
+});
+
+// 2.4 Get Exercise List
+app.get('/api/exercises', (req, res) => {
+    const exercises = {
+        '有氧': [
+            { name: '慢跑', icon: '🏃', burnRatePerMin: 9, burnRatePerSet: 0 },      // 8–10
+            { name: 'HIIT', icon: '⚡', burnRatePerMin: 14, burnRatePerSet: 0 },   // 高强度
+            { name: '骑行', icon: '🚴', burnRatePerMin: 8, burnRatePerSet: 0 },
+            { name: '动感单车', icon: '🎵', burnRatePerMin: 11, burnRatePerSet: 0 },
+            { name: '游泳', icon: '🏊', burnRatePerMin: 10, burnRatePerSet: 0 },
+            { name: '跳绳', icon: '🪢', burnRatePerMin: 12, burnRatePerSet: 0 },
+            { name: '椭圆机', icon: '🏃♂️', burnRatePerMin: 9, burnRatePerSet: 0 },
+            { name: '划船机', icon: '🚣', burnRatePerMin: 11, burnRatePerSet: 0 },
+            { name: '登山机', icon: '⛰️', burnRatePerMin: 12, burnRatePerSet: 0 },
+            { name: '自定义', icon: '✏️', burnRatePerMin: 0, burnRatePerSet: 0 },
+        ],
+        '无氧': [
+            { name: '俯卧撑', icon: '🤸‍♂️', burnRatePerMin: 8, burnRatePerSet: 12 },
+            { name: '卷腹', icon: '🌀', burnRatePerMin: 5, burnRatePerSet: 8 },
+            { name: '基础力量训练', icon: '🏋️', burnRatePerMin: 6, burnRatePerSet: 30 },
+            { name: '大重量复合训练', icon: '🏋️‍♂️', burnRatePerMin: 8, burnRatePerSet: 40 },
+            { name: '壶铃训练', icon: '🔔', burnRatePerMin: 10, burnRatePerSet: 35 },
+            { name: '深蹲专项', icon: '🦵', burnRatePerMin: 7, burnRatePerSet: 25 },
+            { name: '卧推专项', icon: '💪', burnRatePerMin: 6, burnRatePerSet: 22 },
+            { name: '硬拉专项', icon: '🏋️', burnRatePerMin: 8, burnRatePerSet: 35 },
+            { name: '核心训练', icon: '🧘‍♂️', burnRatePerMin: 5, burnRatePerSet: 18 },
+            { name: '自重循环', icon: '🔄', burnRatePerMin: 9, burnRatePerSet: 30 },
+            { name: '自定义', icon: '✏️', burnRatePerMin: 0, burnRatePerSet: 0 },
+        ],
+        '拉伸': [
+            { name: '瑜伽', icon: '🧘', burnRatePerMin: 3, burnRatePerSet: 10 },
+            { name: '拉伸', icon: '🤸', burnRatePerMin: 4, burnRatePerSet: 12 },
+            { name: '热身', icon: '🚶', burnRatePerMin: 3, burnRatePerSet: 6 },
+            { name: '泡沫轴放松', icon: '🛋️', burnRatePerMin: 2, burnRatePerSet: 6 },
+            { name: '自定义', icon: '✏️', burnRatePerMin: 0, burnRatePerSet: 0 },
+        ],
+        '日常': [
+            { name: '慢走', icon: '🚶', burnRatePerMin: 4, burnRatePerSet: 0 },
+            { name: '快走', icon: '🚶‍♂️', burnRatePerMin: 6, burnRatePerSet: 0 },
+            { name: '爬楼梯', icon: '🏢', burnRatePerMin: 9, burnRatePerSet: 0 },
+            { name: '家务清洁', icon: '🧹', burnRatePerMin: 4, burnRatePerSet: 0 },
+            { name: '搬重物', icon: '📦', burnRatePerMin: 7, burnRatePerSet: 0 },
+            { name: '逛街', icon: '🛍️', burnRatePerMin: 3, burnRatePerSet: 0 },
+            { name: '站立办公', icon: '🧍', burnRatePerMin: 2, burnRatePerSet: 0 },
+            { name: '做饭', icon: '🍳', burnRatePerMin: 3, burnRatePerSet: 0 },
+            { name: '遛狗', icon: '🐕', burnRatePerMin: 5, burnRatePerSet: 0 },
+            { name: '自定义', icon: '✏️', burnRatePerMin: 0, burnRatePerSet: 0 },
+        ]
+    };
+    res.json(exercises);
 });
 
 // 3. Update User Profile

@@ -29,6 +29,22 @@ export interface IUser {
 export type IntakeUnit = 'g' | '份';
 export type ExerciseUnit = '分钟' | '次' | '组';
 
+export interface IFoodItem {
+    name: string;
+    icon: string;
+    caloriesPer100g: number;     // kcal/100g
+    caloriesPerServing: number;  // kcal/份（参考份量）
+}
+
+export interface IExerciseOption {
+    name: string;
+    icon: string;
+    burnRatePerMin: number;  // kcal/分钟
+    burnRatePerSet: number;  // kcal/组，0 表示该运动不适用此单位
+}
+
+export type IExerciseCategory = Record<string, IExerciseOption[]>;
+
 export interface IDailyRecord {
     id: string;
     userId: string;

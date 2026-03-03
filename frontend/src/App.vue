@@ -28,7 +28,14 @@ onMounted(async () => {
 });
 
 // 计算属性：从 Store 中提取数据
-const targetCalories = computed(() => userStore.user?.targetCalories || 2000);
+// 优先使用 BMR × 运动系数 得出 TDEE（与 ProfileModal 保持一致）
+const tdeeValue = computed(() => {
+  const user = userStore.user;
+  if (!user) return 0;
+  if (user.bmr && user.bmr > 0) return Math.round(user.bmr * user.activityLevel);
+  // 无 BMR 时退而使用 targetCalories 字段
+  return user.targetCalories || 0;
+});
 const totalIntake = computed(() => journalStore.totals.total_intake);
 const totalBurn = computed(() => journalStore.totals.total_burn);
 const journalEntries = computed(() => journalStore.entries);
@@ -83,12 +90,12 @@ const handleResetDay = () => {
 
 <template>
   <Layout :currentView="currentView" @changeView="v => currentView = v" @openProfile="isProfileOpen = true">
-    <DashboardCards v-show="currentView === 'dashboard'" :targetCalories="targetCalories" :totalIntake="totalIntake"
+    <DashboardCards v-show="currentView === 'dashboard'" :targetCalories="tdeeValue" :totalIntake="totalIntake"
       :totalBurn="totalBurn" @openIntake="isIntakeOpen = true" @openExercise="isExerciseOpen = true"
       @resetDay="handleResetDay" />
 
     <JournalTimeline v-show="currentView === 'journal'" :entries="journalEntries" :totalIntake="totalIntake"
-      :totalBurn="totalBurn" :targetCalories="targetCalories" @date-change="handleDateChange" />
+      :totalBurn="totalBurn" :targetCalories="tdeeValue" @date-change="handleDateChange" />
 
     <template #modals>
       <IntakeModal :isOpen="isIntakeOpen" @close="isIntakeOpen = false" @submit="handleIntakeSubmit" />

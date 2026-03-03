@@ -438,7 +438,6 @@ const callouts = computed(() =>
                                 <!-- 左侧：缺口结果 -->
                                 <div class="gap-formula-left">
                                     <span class="formula-item primary">今日热量缺口</span>
-                                    <span class="gap-result-value"></span>
                                 </div>
                                 <!-- 左侧：缺口结果 -->
                                 <div class="gap-formula-center">
@@ -958,13 +957,6 @@ const callouts = computed(() =>
     white-space: nowrap;
 }
 
-.gap-result-value {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--modal-text-main);
-    white-space: nowrap;
-}
-
 /* 右侧：公式行 */
 .gap-formula-right {
     align-items: center;
@@ -1279,26 +1271,11 @@ const callouts = computed(() =>
 }
 
 /* 通用输入框 */
-.styled-input {
-    width: 100%;
-    padding: 10px 14px;
-    background: var(--modal-input-main);
-    border: 1px solid var(--modal-border);
-    border-radius: 12px;
-    margin-right: 22px;
-    font-size: 14px;
-    color: var(--modal-text-main);
-    font-weight: 600;
-    outline: none;
-    transition: all 0.2s ease;
-}
+/* .styled-input 复用全局 style.css 定义 */
 
-.styled-input:hover,
-.styled-input:focus {
-    border-color: var(--modal-primary);
-    box-shadow: 0 0 0 1px var(--modal-primary), 0 4px 12px rgba(184, 150, 179, 0.15);
-    /* 使用 1px spread 模拟 2px 边框效果，而不影响布局 */
-    background: #fff;
+.input-with-unit .styled-input {
+    /* 为右侧单位标签预留空间 */
+    margin-right: 22px;
 }
 
 .input-with-unit {
