@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import Layout from './components/layout/Layout.vue'
-import DashboardCards from './components/dashboard/DashboardCards.vue'
+import HomeView from './views/HomeView.vue'
 import IntakeModal from './components/modals/IntakeModal.vue'
 import ExerciseModal from './components/modals/ExerciseModal.vue'
 import ProfileModal from './components/modals/ProfileModal.vue'
-import JournalTimeline from './components/journal/JournalTimeline.vue'
 import { useUserStore } from './stores/user'
 import { useJournalStore } from './stores/journal'
 
 const userStore = useUserStore()
 const journalStore = useJournalStore()
 
-const currentView = ref('dashboard');
+const currentView = ref('home');
+
 const isIntakeOpen = ref(false);
 const isExerciseOpen = ref(false);
 const isProfileOpen = ref(false);
-
-const viewDate = ref(new Date());
 
 onMounted(async () => {
   // 初始化加载所有核心数据
@@ -26,25 +24,6 @@ onMounted(async () => {
     journalStore.fetchTodayData()
   ]);
 });
-
-// 计算属性：从 Store 中提取数据
-// 优先使用 BMR × 运动系数 得出 TDEE（与 ProfileModal 保持一致）
-const tdeeValue = computed(() => {
-  const user = userStore.user;
-  if (!user) return 0;
-  if (user.bmr && user.bmr > 0) return Math.round(user.bmr * user.activityLevel);
-  // 无 BMR 时退而使用 targetCalories 字段
-  return user.targetCalories || 0;
-});
-const totalIntake = computed(() => journalStore.totals.total_intake);
-const totalBurn = computed(() => journalStore.totals.total_burn);
-const journalEntries = computed(() => journalStore.entries);
-
-const handleDateChange = (date: Date) => {
-  viewDate.value = date;
-  // TODO: 后续扩展示时按日期拉取
-  console.log('Selected date changed to:', date);
-};
 
 const handleIntakeSubmit = async (data: any) => {
   await journalStore.addEntry({
@@ -81,21 +60,22 @@ const handleProfileSave = async (data: any) => {
   await userStore.updateProfile(data);
   isProfileOpen.value = false;
 };
-
-const handleResetDay = () => {
-  // TODO: 后端清空今日逻辑
-  console.log('Resetting day is not yet implemented on backend');
-};
 </script>
 
 <template>
   <Layout :currentView="currentView" @changeView="v => currentView = v" @openProfile="isProfileOpen = true">
-    <DashboardCards v-show="currentView === 'dashboard'" :targetCalories="tdeeValue" :totalIntake="totalIntake"
-      :totalBurn="totalBurn" @openIntake="isIntakeOpen = true" @openExercise="isExerciseOpen = true"
-      @resetDay="handleResetDay" />
 
-    <JournalTimeline v-show="currentView === 'journal'" :entries="journalEntries" :totalIntake="totalIntake"
-      :totalBurn="totalBurn" :targetCalories="tdeeValue" @date-change="handleDateChange" />
+    <!-- Home 视图：抽取为了单独的组件 -->
+    <HomeView v-show="currentView === 'home'" @openIntake="isIntakeOpen = true" @openExercise="isExerciseOpen = true" />
+
+    <!-- 其他功能模块待开发占位符 -->
+    <div v-show="currentView !== 'home'" class="placeholder-view">
+      <div class="placeholder-content">
+        <span style="font-size: 64px; margin-bottom: 24px; display: block;">🚧</span>
+        <h2 style="color: #8B6A70; font-size: 24px; margin-bottom: 8px;">模块建设中</h2>
+        <p style="color: #A38489;">该功能尚未开放，敬请期待！</p>
+      </div>
+    </div>
 
     <template #modals>
       <IntakeModal :isOpen="isIntakeOpen" @close="isIntakeOpen = false" @submit="handleIntakeSubmit" />
@@ -105,3 +85,21 @@ const handleResetDay = () => {
     </template>
   </Layout>
 </template>
+
+<style scoped>
+/* 占位提示样式 */
+.placeholder-view {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-content {
+  text-align: center;
+  background: #F8F3ED;
+  padding: 48px 64px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+</style>

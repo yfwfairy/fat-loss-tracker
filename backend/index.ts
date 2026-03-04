@@ -254,6 +254,20 @@ app.get('/api/dashboard/today', (req, res) => {
     res.json(record);
 });
 
+// 4.1 Get Dashboard Stats for a Specific Month [NEW]
+app.get('/api/dashboard/month', (req, res) => {
+    const { month } = req.query; // format: YYYY-MM
+    const userId = 'default-user-id';
+
+    if (!month || typeof month !== 'string') {
+        return res.status(400).json({ error: 'Missing or invalid month parameter. Expected format YYYY-MM.' });
+    }
+
+    // 根据 date 字段模糊匹配 (SQLite 字符串匹配方式 YYYY-MM%)
+    const records = db.query('SELECT * FROM daily_records WHERE user_id = ? AND date LIKE ? ORDER BY date ASC').all(userId, `${month}%`);
+    res.json(records);
+});
+
 // 5. Get Journal Entries for Today
 app.get('/api/journal/today', (req, res) => {
     const today = new Date().toISOString().split('T')[0] || '';

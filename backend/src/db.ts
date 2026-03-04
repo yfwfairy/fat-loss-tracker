@@ -75,10 +75,18 @@ export function initDB() {
   } else {
     console.log(`[DB] 当前 Schema v${currentVersion}，目标 v${targetVersion}，开始迁移...`);
     for (let i = currentVersion; i < targetVersion; i++) {
-      db.run(MIGRATIONS[i]!);
+      try {
+        db.run(MIGRATIONS[i]!);
+      } catch (error: any) {
+        if (error.message && error.message.includes('duplicate column name')) {
+          console.log(`[DB] ⚠️ 列已存在跳过迁移 v${i + 1}`);
+        } else {
+          throw error;
+        }
+      }
+      db.run(`PRAGMA user_version = ${i + 1}`);
       console.log(`[DB] 迁移 v${i + 1} 完成`);
     }
-    db.run(`PRAGMA user_version = ${targetVersion}`);
     console.log(`[DB] 迁移完成，Schema 现为 v${targetVersion}`);
   }
 

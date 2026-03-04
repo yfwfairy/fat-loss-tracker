@@ -21,11 +21,11 @@ const fillPct = computed(() => (fillRatio.value * 100).toFixed(1) + '%');
 const deficit = computed(() => totalCapacity.value - caloriesConsumed.value);
 
 const QUOTES = [
-  { min: 1000, text: "哇哦！这种缺口简直是燃脂大师！" },
-  { min: 500, text: "干得漂亮！又打败了一大波脂肪怪！" },
-  { min: 200, text: "稳步前进中，身体正在变轻盈哦~" },
-  { min: 0, text: "继续保持，离目标又近了一步！" },
-  { min: -9999, text: "没关系，明天又是新的一天，加油！" }
+    { min: 1000, text: "哇哦！这种缺口简直是燃脂大师！" },
+    { min: 500, text: "干得漂亮！又打败了一大波脂肪怪！" },
+    { min: 200, text: "稳步前进中，身体正在变轻盈哦~" },
+    { min: 0, text: "继续保持，离目标又近了一步！" },
+    { min: -9999, text: "没关系，明天又是新的一天，加油！" }
 ];
 
 const deficitQuote = computed(() => {
@@ -65,13 +65,21 @@ const addFloatText = (text: string, isPositive: boolean) => {
     }, 1200);
 };
 
+// 使用一个标记来跳过组件刚挂载时的初次数据同步飘字
+let isInitialLoad = true;
+setTimeout(() => {
+    isInitialLoad = false;
+}, 1000); // 1秒后解除锁定，此时基本完成接口请求和数据赋值
+
 watch(() => props.totalIntake, (newVal, oldVal) => {
+    if (isInitialLoad) return;
     if (newVal > oldVal) {
         addFloatText(`+${newVal - oldVal} kcal`, false);
     }
 });
 
 watch(() => props.totalBurn, (newVal, oldVal) => {
+    if (isInitialLoad) return;
     if (newVal > oldVal) {
         addFloatText(`+${newVal - oldVal} 容量`, true);
     }
@@ -79,113 +87,122 @@ watch(() => props.totalBurn, (newVal, oldVal) => {
 </script>
 
 <template>
-  <div class="view-container" id="view-dashboard">
-    <!-- 1. 顶部英雄卡片 (游戏化体力条) -->
-    <section class="survival-game-card">
-        <!-- 装饰小草 -->
-        <div class="grass-decorations">
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-            <div class="grass"></div>
-        </div>
-        <!-- 标题行 -->
-        <div class="game-header-panel">
-            <div class="game-title-group">
-                <span class="game-title-icon">🍓</span>
-                <span class="game-title-text">今日体力·卡路里之路</span>
-            </div>
-            <div class="header-kcal-wrapper" style="position: relative;">
-                <div class="game-kcal-counter" id="kcalDisplay">{{ Math.round(remaining) }} / {{ Math.round(totalCapacity) }}</div>
-                <!-- 飘字现在挂载到仪表盘这里 -->
-                <div class="float-text-container" id="floatContainer">
-                    <div v-for="ft in floatTexts" :key="ft.id" class="float-text" :style="{ color: ft.isPositive ? '#B1A678' : '#D6697A' }">{{ ft.text }}</div>
-                </div>
-            </div>
-        </div>
-        <!-- 轨道 + 进度条区域 -->
-        <div class="track-wrapper" id="trackWrapper">
-            <div class="survival-track">
-                <!-- 刻度 -->
-                <div class="track-marks">
-                    <div v-for="(pos, idx) in trackMarks" :key="idx" :style="{ right: pos + '%' }"></div>
-                </div>
-                <!-- 动态填充条（宽度由 JS 控制） -->
-                <div class="survival-fill" :class="status" id="survivalFill" :style="{ width: fillPct }"></div>
-                <!-- 体力条上的小人化身（右侧对齐当前宽度） -->
-                <div class="survival-avatar" :class="status === 'depleted' || status === 'gameover' ? status : ''" id="survivalAvatar" :style="{ right: fillPct }">
-                    <!-- 用纯 CSS 拼接的小人，基于原型 -->
-                    <div class="sv-avatar-hat">
-                        <div class="hat-brim"></div>
-                        <div class="hat-top"></div>
-                    </div>
-                    <div class="sv-avatar-head">
-                        <div class="sv-eye left"></div>
-                        <div class="sv-eye right"></div>
-                        <div class="sv-sweat" id="svSweat" :style="{ display: status === 'warning' ? 'block' : 'none' }"></div>
-                    </div>
-                    <div class="sv-avatar-body">
-                        <div class="sv-pants"></div>
+    <div class="view-container" id="view-dashboard">
+        <!-- 1. 顶部英雄卡片 (游戏化体力条) -->
+        <section class="survival-game-card">
+            <!-- 标题行 -->
+            <div class="game-header-panel">
+                <div class="game-title-group">
+                    <span class="game-title-icon">🍓</span>
+                    <span class="game-title-text">今日体力·卡路里之路</span>
+                    <!-- 装饰小草 -->
+                    <div class="grass-decorations">
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
+                        <div class="grass"></div>
                     </div>
                 </div>
+
+            </div>
+            <!-- 轨道 + 进度条区域 -->
+            <div class="track-wrapper" id="trackWrapper">
+                <div class="survival-track">
+                    <!-- 刻度 -->
+                    <div class="track-marks">
+                        <div v-for="(pos, idx) in trackMarks" :key="idx" :style="{ right: pos + '%' }"></div>
+                    </div>
+                    <!-- 动态填充条（宽度由 JS 控制） -->
+                    <div class="survival-fill" :class="status" id="survivalFill" :style="{ width: fillPct }"></div>
+                    <!-- 体力条上的小人化身（右侧对齐当前宽度） -->
+                    <div class="header-kcal-wrapper" style="position: relative;">
+                        <div class="float-text-container" id="floatContainer">
+                            <div v-for="ft in floatTexts" :key="ft.id" class="float-text"
+                                :style="{ color: ft.isPositive ? '#B1A678' : '#D6697A' }">{{ ft.text }}</div>
+                        </div>
+                    </div>
+                    <div class="survival-avatar" :class="status === 'depleted' || status === 'gameover' ? status : ''"
+                        id="survivalAvatar" :style="{ right: fillPct }">
+                        <!-- 用纯 CSS 拼接的小人，基于原型 -->
+                        <div class="sv-avatar-hat">
+                            <div class="hat-brim"></div>
+                            <div class="hat-top"></div>
+                        </div>
+                        <div class="sv-avatar-head">
+                            <div class="sv-eye left"></div>
+                            <div class="sv-eye right"></div>
+                            <div class="sv-sweat" id="svSweat"
+                                :style="{ display: status === 'warning' ? 'block' : 'none' }"></div>
+                        </div>
+                        <div class="sv-avatar-body">
+                            <div class="sv-pants"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 快捷动作触发区 (挪入进度条内) -->
+                <section class="quick-actions wood-actions">
+                    <button class="pixel-btn btn-action-eat" @click="emit('openIntake')">
+                        <span class="action-icon">🍎</span>
+                        <span class="action-text">记摄入</span>
+                    </button>
+                    <button class="pixel-btn btn-action-exercise" @click="emit('openExercise')">
+                        <span class="action-icon">🏃</span>
+                        <span class="action-text">记消耗</span>
+                    </button>
+                    <button class="pixel-btn btn-action-reset" @click="emit('resetDay')">
+                        <span class="action-icon">🔄</span>
+                        <span class="action-text">重置</span>
+                    </button>
+                </section>
+            </div>
+        </section>
+
+        <!-- 3. 数据仪表盘区 -->
+        <section class="stats-dashboard">
+            <!-- 卡片 A: 饮食摄入 -->
+            <div class="stat-card card-diet">
+                <div class="stat-icon">🍽️</div>
+                <div class="stat-content">
+                    <div class="stat-title">今日摄入</div>
+                    <div class="stat-value"><span id="dietValue">{{ Math.round(caloriesConsumed) }}</span> <span
+                            class="unit">kcal</span></div>
+                    <div class="mini-bar">
+                        <div class="mini-fill" id="dietBar"
+                            :style="{ width: Math.min(100, (caloriesConsumed / totalCapacity) * 100) + '%' }"></div>
+                    </div>
+                </div>
             </div>
 
-            <!-- 4. 快捷动作触发区 (挪入进度条内) -->
-            <section class="quick-actions wood-actions">
-                <button class="pixel-btn btn-action-eat" @click="emit('openIntake')">
-                    <span class="action-icon">🍎</span>
-                    <span class="action-text">记摄入</span>
-                </button>
-                <button class="pixel-btn btn-action-exercise" @click="emit('openExercise')">
-                    <span class="action-icon">🏃</span>
-                    <span class="action-text">记消耗</span>
-                </button>
-                <button class="pixel-btn btn-action-reset" @click="emit('resetDay')">
-                    <span class="action-icon">🔄</span>
-                    <span class="action-text">重置</span>
-                </button>
-            </section>
-        </div>
-    </section>
-
-    <!-- 3. 数据仪表盘区 -->
-    <section class="stats-dashboard">
-        <!-- 卡片 A: 饮食摄入 -->
-        <div class="stat-card card-diet">
-            <div class="stat-icon">🍽️</div>
-            <div class="stat-content">
-                <div class="stat-title">今日摄入</div>
-                <div class="stat-value"><span id="dietValue">{{ Math.round(caloriesConsumed) }}</span> <span class="unit">kcal</span></div>
-                <div class="mini-bar"><div class="mini-fill" id="dietBar" :style="{ width: Math.min(100, (caloriesConsumed / totalCapacity) * 100) + '%' }"></div></div>
+            <!-- 卡片 B: 运动消耗 (总容量) -->
+            <div class="stat-card card-burn">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-content">
+                    <div class="stat-title">总消耗</div>
+                    <div class="stat-value"><span id="burnValue">{{ Math.round(totalCapacity) }}</span> <span
+                            class="unit">kcal</span></div>
+                    <div class="stat-subtext" id="burnSub">基础 {{ baseAllowance }} + 活动 {{ Math.round(bonusCapacity) }}
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- 卡片 B: 运动消耗 (总容量) -->
-        <div class="stat-card card-burn">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-content">
-                <div class="stat-title">总消耗</div>
-                <div class="stat-value"><span id="burnValue">{{ Math.round(totalCapacity) }}</span> <span class="unit">kcal</span></div>
-                <div class="stat-subtext" id="burnSub">基础 {{ baseAllowance }} + 活动 {{ Math.round(bonusCapacity) }}</div>
+            <!-- 卡片 C: 缺口结算 (跨两列) -->
+            <div class="stat-card card-deficit full-width">
+                <div class="stat-icon">🌟</div>
+                <div class="deficit-info">
+                    <div class="stat-title">今日缺口结算</div>
+                    <div class="stat-value" :class="{ 'highlight-deficit': deficit >= 0 }"><span id="deficitValue">{{
+                        Math.round(deficit) }}</span><span class="unit">kcal</span></div>
+                    <div class="stat-quote" id="deficitQuote">{{ deficitQuote }}</div>
+                </div>
             </div>
-        </div>
-
-        <!-- 卡片 C: 缺口结算 (跨两列) -->
-        <div class="stat-card card-deficit full-width">
-            <div class="stat-icon">🌟</div>
-            <div class="deficit-info">
-                <div class="stat-title">今日缺口结算</div>
-                <div class="stat-value" :class="{ 'highlight-deficit': deficit >= 0 }"><span id="deficitValue">{{ Math.round(deficit) }}</span><span class="unit">kcal</span></div>
-                <div class="stat-quote" id="deficitQuote">{{ deficitQuote }}</div>
-            </div>
-        </div>
-    </section>
-  </div>
+        </section>
+    </div>
 </template>
 
 <style scoped>
@@ -194,6 +211,12 @@ Vue 的 Computed 接管了 SVG 位移计算，
 CSS 只负责原本在全局 style.css 中的过渡动画：
 .circle-bar { transition: stroke-dashoffset 1s ease-out; } 
 */
+
+
+/* 格子纸背景 */
+#view-dashboard {
+    padding: 24px;
+}
 
 /* --- 每日任务列表 --- */
 .quests-section h3 {
@@ -294,41 +317,6 @@ CSS 只负责原本在全局 style.css 中的过渡动画：
 }
 
 /* 2. 核心游戏化路线区 (星露谷生存体力条) */
-.survival-game-card {
-    background-color: #F3E0D6;
-    /* 暖粉白基底 */
-    background-image:
-        radial-gradient(circle at 10px 10px, #E3B8A5 1px, transparent 1px),
-        /* 面板装饰点 */
-        linear-gradient(45deg, #F5D5C4 20%, #FCE6DA 80%);
-    /* 面板渐变 */
-    background-size: 20px 20px, 100%;
-    border: 4px solid #B1877A;
-    /* 面板边框 */
-    border-radius: 15px;
-    box-shadow: 0 8px 0 #8E6B61, 0 16px 16px rgba(0, 0, 0, 0.1);
-    /* 面板外阴影 */
-    padding: 24px 20px 16px 20px;
-    margin-bottom: 32px;
-    position: relative;
-}
-
-/* 标题行 */
-.game-header-panel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #F0D9CC;
-    /* 标题栏背景 */
-    border: 3px solid #C29A8A;
-    /* 标题栏边框 */
-    border-radius: 20px;
-    padding: 8px 16px;
-    margin-bottom: 20px;
-    box-shadow: inset 0 -3px 0 #B58272, 0 4px 0 #8F6659;
-    /* 内阴影与外阴影 */
-}
-
 .game-title-group {
     display: flex;
     align-items: center;
@@ -350,27 +338,11 @@ CSS 只负责原本在全局 style.css 中的过渡动画：
     /* 文字阴影：浅粉 */
 }
 
-.game-kcal-counter {
-    background: #644B55;
-    /* 计数器背景：深紫灰 */
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: #FAD6C0;
-    /* 计数器文字：暖粉白 */
-    font-size: 13px;
-    font-weight: 800;
-    border: 2px solid #B6867A;
-    /* 计数器边框：粉棕 */
-    box-shadow: inset 0 -2px 0 #452F38;
-    /* 计数器内阴影 */
-    font-family: monospace;
-}
-
 /* 装饰小草 */
 .grass-decorations {
     display: flex;
     gap: 16px;
-    justify-content: center;
+    justify-content: flex-end;
     margin-bottom: 8px;
 }
 
@@ -422,14 +394,21 @@ CSS 只负责原本在全局 style.css 中的过渡动画：
 .track-wrapper {
     position: relative;
     margin: 16px 0 24px;
-    background: #E3C9BB;
-    /* 轨道容器背景：浅粉 */
-    border-radius: 30px;
-    padding: 58px 30px 22px 30px;
+    background-color: #F3E0D6;
+    /* 暖粉白基底 */
+    background-image:
+        radial-gradient(circle at 10px 10px, #E3B8A5 1px, transparent 1px),
+        /* 面板装饰点 */
+        linear-gradient(45deg, #F5D5C4 20%, #FCE6DA 80%);
+    /* 面板渐变 */
+    background-size: 20px 20px, 100%;
     border: 4px solid #B1877A;
-    /* 轨道容器边框 */
-    box-shadow: inset 0 -4px 0 #A47061, 0 6px 0 #765349;
-    /* 轨道容器阴影 */
+    /* 面板边框 */
+    border-radius: 15px;
+    box-shadow: 0 4px 0 #8E6B61, 0 16px 16px rgba(0, 0, 0, 0.1);
+    /* 面板外阴影 */
+    padding: 24px 20px 16px 20px;
+    position: relative;
 }
 
 .survival-track {
@@ -703,7 +682,8 @@ CSS 只负责原本在全局 style.css 中的过渡动画：
 }
 
 .stat-card {
-    background: #F3E0D6;
+    /* 暖粉白基底 */
+    background-image: linear-gradient(180deg, #F5D5C4 20%, #FCE6DA 80%);
     /* 卡片背景：暖粉白 */
     border: 3px solid #B1877A;
     /* 边框：红棕 */

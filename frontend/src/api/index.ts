@@ -7,13 +7,31 @@ export const api = {
     async getUser(id?: string): Promise<IUser> {
         const url = id ? `${API_BASE}/user/${id}` : `${API_BASE}/user`;
         const res = await fetch(url);
-        return res.json();
+        const json = await res.json();
+        const raw = json.data || json;
+        return {
+            ...raw,
+            activityLevel: raw.activityLevel ?? raw.activity_level ?? 1.2,
+            targetCalories: raw.targetCalories ?? raw.target_calories ?? 0,
+            bodyFat: raw.bodyFat ?? raw.body_fat ?? null,
+            avatarId: raw.avatarId ?? raw.avatar_id ?? '🌿',
+            levelTitle: raw.levelTitle ?? raw.level_title ?? ''
+        };
     },
 
     // 1.1 初始化匿名用户 [NEW]
     async initUser(): Promise<IUser> {
         const res = await fetch(`${API_BASE}/user/init`, { method: 'POST' });
-        return res.json();
+        const json = await res.json();
+        const raw = json.user || json.data || json;
+        return {
+            ...raw,
+            activityLevel: raw.activityLevel ?? raw.activity_level ?? 1.2,
+            targetCalories: raw.targetCalories ?? raw.target_calories ?? 0,
+            bodyFat: raw.bodyFat ?? raw.body_fat ?? null,
+            avatarId: raw.avatarId ?? raw.avatar_id ?? '🌿',
+            levelTitle: raw.levelTitle ?? raw.level_title ?? ''
+        };
     },
 
     // 1.2 获取头像列表
@@ -47,6 +65,13 @@ export const api = {
     // 3. 获取今日汇总
     async getTodayDashboard(): Promise<{ total_intake: number; total_burn: number }> {
         const res = await fetch(`${API_BASE}/dashboard/today`);
+        const json = await res.json();
+        return json.data || json;
+    },
+
+    // 3.1 获取本月汇总 [NEW]
+    async getMonthDashboard(month: string): Promise<Array<{ date: string; total_intake: number; total_burn: number }>> {
+        const res = await fetch(`${API_BASE}/dashboard/month?month=${month}`);
         return res.json();
     },
 

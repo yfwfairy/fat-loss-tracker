@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import type { JournalEntry } from '@fat-loss-tracker/shared-types';
+import { api } from '../../api';
 
 const props = defineProps<{
     entries: JournalEntry[];
@@ -35,16 +36,6 @@ const getDesc = (entry: any) => {
     }
 };
 
-// TDEE（targetCalories）+ 运动消耗，与 DashboardCards 保持一致
-const totalCapacity = computed(() => props.targetCalories + props.totalBurn);
-
-const ringStyle = computed(() => {
-    const intakeRatio = Math.min(1, props.totalIntake / totalCapacity.value);
-    const intakePct = (intakeRatio * 100).toFixed(1);
-    return {
-        background: `conic-gradient(var(--color-accent) ${intakePct}%, #FFEDEA 0)`
-    };
-});
 
 // === 日历逻辑相关状态 ===
 const selectedDate = ref(new Date());
@@ -59,30 +50,16 @@ const todayDateString = computed(() => {
     return `${d.getMonth() + 1}月${d.getDate()}日`;
 });
 
-const tabDayLabel = computed(() => {
-    const d = selectedDate.value;
-    const today = new Date();
-    const isToday = d.getDate() === today.getDate() &&
-        d.getMonth() === today.getMonth() &&
-        d.getFullYear() === today.getFullYear();
-    return isToday ? "今天" : `${d.getMonth() + 1}月${d.getDate()}日`;
-});
-
-const tabMonthLabel = computed(() => {
-    return `${selectedDate.value.getMonth() + 1}月`;
-});
-
 // 日历网格计算
 const dateGrid = computed(() => {
     const grid = [];
-    const firstDay = new Date(displayYear.value, displayMonth.value, 1).getDay();
-    const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+    const firstDay = new Date(displayYear.value, displayMonth.value, 1).getDay(); // 0 is Sunday
 
     const daysInMonth = new Date(displayYear.value, displayMonth.value + 1, 0).getDate();
     const daysInPrevMonth = new Date(displayYear.value, displayMonth.value, 0).getDate();
 
     // 上月余数
-    for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+    for (let i = firstDay - 1; i >= 0; i--) {
         grid.push({
             day: daysInPrevMonth - i,
             monthOffset: -1,
@@ -136,12 +113,6 @@ const toggleDatePicker = (e?: Event) => {
     }
 };
 
-const toggleMonthPicker = (e?: Event) => {
-    if (e) e.stopPropagation();
-    isMonthPickerOpen.value = !isMonthPickerOpen.value;
-    isDatePickerOpen.value = false;
-};
-
 const selectDate = (cell: any) => {
     let targetMonth = displayMonth.value + cell.monthOffset;
     let targetYear = displayYear.value;
@@ -151,6 +122,7 @@ const selectDate = (cell: any) => {
     selectedDate.value = new Date(targetYear, targetMonth, cell.day);
     isDatePickerOpen.value = false;
     isMonthView.value = false;
+    // 不关闭本月汇总面板，让用户可以在面板中继续切换日期
     emit('date-change', selectedDate.value);
 };
 
@@ -200,7 +172,51 @@ const closeAllPickers = () => {
     isMonthPickerOpen.value = false;
 };
 
+// --- 本月汇总功能 ---
+const isMonthSummaryOpen = ref(false);
+const monthlyRecords = ref<any[]>([]);
+
+const fetchMonthlyRecords = async () => {
+    const m = displayMonth.value + 1;
+    const monthStr = `${displayYear.value}-${m.toString().padStart(2, '0')}`;
+    try {
+        const records = await api.getMonthDashboard(monthStr);
+        monthlyRecords.value = records;
+    } catch (e) {
+        console.error("Failed to fetch monthly records:", e);
+        monthlyRecords.value = [];
+    }
+};
+
+const getDailyDeficit = (day: number) => {
+    const m = displayMonth.value + 1;
+    const dateStr = `${displayYear.value}-${m.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    const record = monthlyRecords.value.find(r => r.date === dateStr);
+
+    if (record) {
+        // 缺口 = 目标热量 + 消耗 - 摄入
+        return Math.round(props.targetCalories + record.total_burn - record.total_intake);
+    }
+    return null;
+};
+
+watch([displayYear, displayMonth], () => {
+    fetchMonthlyRecords();
+});
+
+// 切换本月汇总面板，每次展开时重置回当月
+const toggleSummaryPanel = () => {
+    if (!isMonthSummaryOpen.value) {
+        const today = new Date();
+        displayMonth.value = today.getMonth();
+        displayYear.value = today.getFullYear();
+        fetchMonthlyRecords();
+    }
+    isMonthSummaryOpen.value = !isMonthSummaryOpen.value;
+};
+
 onMounted(() => {
+    fetchMonthlyRecords();
     window.addEventListener('click', closeAllPickers);
 });
 onUnmounted(() => {
@@ -211,56 +227,45 @@ onUnmounted(() => {
 
 <template>
     <div class="view-container" id="view-journal">
-        <!-- 顶部日期与热量环 -->
         <header class="journal-header">
             <div class="journal-date-info">
-                <h2 class="huge-date" @click.stop="toggleDatePicker">
-                    <span id="journal-date-text">{{ todayDateString }}</span>
-                    <div class="date-icon-wrapper">
-                        <span class="calendar-icon">📅</span>
-                    </div>
-                </h2>
-                <div class="date-subtitle">生活饮食记录</div>
+                <div class="date-navigator" style="position: relative;">
+                    <button class="nav-btn month-btn" @click.stop="changeMonth(-1)">«</button>
+                    <button class="nav-btn day-btn" @click.stop="goPrevDay">‹</button>
 
-                <!-- 视图切换控件 Tabs -->
-                <div class="view-tabs-group" style="position: relative;">
-                    <button class="view-tab" :class="{ active: !isMonthView }" id="tab-day-view"
-                        @click.stop="toggleDatePicker">
-                        <span class="nav-arrow" id="nav-prev-day" @click.stop="goPrevDay">‹</span>
-                        <span class="tab-label">{{ tabDayLabel }}</span>
-                        <span class="nav-arrow" id="nav-next-day" @click.stop="goNextDay">›</span>
-                    </button>
-                    <button class="view-tab" :class="{ active: isMonthView }" id="tab-month-view"
-                        @click.stop="toggleMonthPicker">
-                        <span class="tab-icon">📅</span>
-                        <span class="tab-label">{{ isMonthView ? tabMonthLabel : '月历' }}</span>
-                    </button>
+                    <h2 class="huge-date" @click.stop="toggleDatePicker">
+                        <span id="journal-date-text">{{ todayDateString }}</span>
+                    </h2>
+
+                    <button class="nav-btn day-btn" @click.stop="goNextDay">›</button>
+                    <button class="nav-btn month-btn" @click.stop="changeMonth(1)">»</button>
 
                     <!-- Date Picker Popover -->
-                    <div v-if="isDatePickerOpen" class="custom-picker-popover" style="top: 50px; left: 0;" @click.stop>
+                    <div v-if="isDatePickerOpen" class="custom-picker-popover"
+                        style="top: 10px; left: calc(100% + 15px);" @click.stop>
                         <div class="picker-header">
                             <button class="picker-nav-btn" @click="changeYear(-1)">«</button>
                             <button class="picker-nav-btn" @click="changeMonth(-1)">‹</button>
                             <div class="picker-current-view" @click="setToday">{{ displayYear }} 年 {{ displayMonth + 1
-                                }} 月</div>
+                            }} 月</div>
                             <button class="picker-nav-btn" @click="changeMonth(1)">›</button>
                             <button class="picker-nav-btn" @click="changeYear(1)">»</button>
                         </div>
                         <div class="picker-weekdays">
-                            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
                         </div>
                         <div class="picker-days-grid">
                             <div v-for="(cell, idx) in dateGrid" :key="idx" class="picker-cell"
                                 :class="{ 'not-current-month': !cell.isCurrentMonth, 'is-today': cell.isToday, 'selected': cell.isSelected }"
                                 @click="selectDate(cell)">
-                                {{ cell.day }}
+                                {{ cell.isCurrentMonth ? cell.day : '' }}
                             </div>
                         </div>
                     </div>
 
                     <!-- Month Picker Popover -->
-                    <div v-if="isMonthPickerOpen" class="custom-picker-popover" style="top: 50px; left: 100px;"
-                        @click.stop>
+                    <div v-if="isMonthPickerOpen" class="custom-picker-popover"
+                        style="top: 10px; left: calc(100% + 15px);" @click.stop>
                         <div class="picker-header">
                             <button class="picker-nav-btn" @click="changeYear(-1)">«</button>
                             <div class="picker-current-view" @click="setToday">{{ displayYear }} 年</div>
@@ -275,19 +280,17 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
+                <div class="date-subtitle">生活饮食记录</div>
             </div>
 
-            <div class="daily-calorie-ring" :style="ringStyle">
-                <div class="ring-circle">
-                    <div class="ring-text">
-                        <span class="ring-num" id="journalRingNum">{{ Math.round(totalCapacity) }}</span>
-                        <span class="ring-label">kcal</span>
-                    </div>
-                </div>
-            </div>
+            <!-- 本月汇总 移到右侧，木牌按钮样式 -->
+            <button class="wooden-summary-btn" :class="{ active: isMonthSummaryOpen }"
+                @click.stop="toggleSummaryPanel()">
+                本月汇总
+            </button>
         </header>
 
-        <div class="journal-content-wrapper">
+        <div class="journal-content-wrapper" :class="{ 'with-sidebar': isMonthSummaryOpen }">
             <!-- 日视图：时间轴 -->
             <div class="journal-timeline active-view" id="journalTimeline"
                 :class="{ 'has-entries': entries.length > 0 }">
@@ -318,29 +321,132 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
+            <!-- 月度汇总侧边面板 -->
+            <transition name="slide-right">
+                <div class="month-summary-panel" v-show="isMonthSummaryOpen">
+
+                    <div class="panel-content">
+                        <!-- 月份切换 -->
+                        <div class="summary-month-control">
+                            <button class="picker-nav-btn" @click="changeMonth(-1)" style="font-size: 24px;">‹</button>
+                            <span class="summary-month-title" @click="setToday">{{ displayYear }} 年 {{ displayMonth + 1
+                            }} 月</span>
+                            <button class="picker-nav-btn" @click="changeMonth(1)" style="font-size: 24px;">›</button>
+                        </div>
+
+                        <div class="picker-weekdays summary-weekdays">
+                            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                        </div>
+                        <div class="picker-days-grid summary-grid">
+                            <div v-for="(cell, idx) in dateGrid" :key="idx" class="summary-cell"
+                                :class="{ 'not-current-month': !cell.isCurrentMonth, 'is-today': cell.isToday, 'selected': cell.isSelected }"
+                                @click="cell.isCurrentMonth ? selectDate(cell) : null">
+                                <div class="summary-day">{{ cell.isCurrentMonth ? cell.day : '' }}</div>
+                                <div class="summary-deficit" v-if="cell.isCurrentMonth">
+                                    <template v-if="getDailyDeficit(cell.day) !== null">
+                                        <span
+                                            :class="getDailyDeficit(cell.day)! >= 0 ? 'deficit-positive' : 'deficit-negative'">
+                                            {{ getDailyDeficit(cell.day)! > 0 ? '+' : '' }}{{ getDailyDeficit(cell.day)
+                                            }}
+                                        </span>
+                                    </template>
+                                    <template v-else>
+                                        <span class="deficit-empty">-</span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
         </div>
     </div>
 </template>
 
 <style scoped>
 /* ===== 手账视图 (Journal) ===== */
+
+/* 格子纸背景 */
+#view-journal {
+    background-image:
+        linear-gradient(to right, #E3B8A5 1px, transparent 1px),
+        linear-gradient(to bottom, #E3B8A5 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-color: #F5D5C4;
+    padding: 24px;
+    border-radius: 14px;
+    /* 高度固定，内部内容滚动 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* 覆盖全局 .view-container gap:32px，缩小 header 与内容区间距 */
+    flex: 1;
+    /* 继承父容器 .home-content 的剩余高度 */
+    min-height: 0;
+    /* flex 子项必须有此属性才能被压缩 */
+    box-sizing: border-box;
+}
+
 .journal-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
+}
+
+/* --- 顶部日期导航栏 --- */
+.date-navigator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-bouncy);
+    opacity: 0.6;
+    padding: 8px;
+    /* 增加整体可触控面积 */
+    margin: -4px;
+    /* 负外边距抵消 padding ，保持排版不偏移 */
+}
+
+.nav-btn.day-btn {
+    font-size: 32px;
+}
+
+.nav-btn.month-btn {
+    font-size: 24px;
+}
+
+.nav-btn:hover {
+    opacity: 1;
+    color: var(--color-accent);
+    background: #FFEDEA;
+    transform: scale(1.1);
 }
 
 .huge-date {
     font-size: 40px;
     font-weight: 800;
     color: var(--text-primary);
-    margin-bottom: 4px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    cursor: pointer;
     font-family: serif;
-    /* 优雅的衬线字体感 */
+    transition: var(--transition-bouncy);
+}
+
+.huge-date:hover {
+    color: var(--color-accent);
 }
 
 .date-icon-wrapper {
@@ -416,50 +522,37 @@ onUnmounted(() => {
 }
 
 
-
-/* 右侧热量环 */
-.daily-calorie-ring {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    /* 这个决定了环的粗细 */
-    box-shadow: var(--shadow-soft);
-}
-
-.ring-circle {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ring-text {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-}
-
-.ring-num {
-    font-size: 24px;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.ring-label {
-    font-size: 12px;
-    color: var(--text-primary);
-}
-
-/* --- 切换容器 --- */
+/* --- 切换容器布局调整 --- */
 .journal-content-wrapper {
     position: relative;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    width: 100%;
+    flex: 1;
+    /* 充满剩余高度 */
+    min-height: 0;
+    /* flex 子项必备，防止溢出 */
+    overflow: hidden;
+}
+
+.journal-timeline {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    /* 内部滚动条 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+    transition: all 0.3s cubic-bezier(0.82, 0.085, 0.395, 0.895);
+}
+
+.journal-timeline::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari 隐藏滚动条，保留滚动能力 */
 }
 
 .active-view {
@@ -530,8 +623,8 @@ onUnmounted(() => {
     left: 80px;
     /* 控制线的位置 */
     width: 2px;
-    background-color: #ffffff33;
-    /* 原木色虚线感 */
+    background-color: rgba(139, 90, 80, 0.35);
+    /* 木色线，比之前超亮的白色更清晰 */
 }
 
 .timeline-item {
@@ -545,7 +638,7 @@ onUnmounted(() => {
     width: 60px;
     text-align: right;
     font-weight: 700;
-    color: var(--text-third);
+    color: #8b5b5baf;
     font-size: 14px;
     position: relative;
     padding-top: 16px;
@@ -570,17 +663,41 @@ onUnmounted(() => {
     flex: 1;
     display: flex;
     gap: 16px;
-    background: var(--bg-surface);
-    padding: 16px;
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-soft);
-    transition: var(--transition-bouncy);
+    /* 木质卡片风格：暗棕色底色、印花背景、可谁粗边框 */
+    background-color: #F3E0D6;
+    background-image: linear-gradient(45deg, #F5D5C4 20%, #FCE6DA 80%);
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 3px solid #B1877A;
+    box-shadow: 0 4px 0 #8E6B61, 0 8px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s, box-shadow 0.15s;
     align-items: center;
 }
 
 .timeline-content:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-solid);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8E6B61, 0 12px 16px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-content:active {
+
+    box-shadow: 0 6px 0 #8E6B61;
+}
+
+/* 运动记录用稍深的绿色木质 */
+.entry-exercise .timeline-content {
+    background-color: #D4E8D8;
+    background-image: linear-gradient(45deg, #C8E4CC 20%, #DCF0DF 80%);
+    border-color: #7BA87F;
+    box-shadow: 0 4px 0 #5E8861, 0 8px 12px rgba(0, 0, 0, 0.08);
+}
+
+.entry-exercise .timeline-content:hover {
+    box-shadow: 0 2px 0 #5E8861, 0 12px 16px rgba(0, 0, 0, 0.1);
+}
+
+.entry-exercise .timeline-content:active {
+    box-shadow: 0 6px 0 #5E8861;
 }
 
 
@@ -588,21 +705,23 @@ onUnmounted(() => {
 .timeline-icon-box {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 26px;
     flex-shrink: 0;
-    background: #F8F9FA;
+    /* 摔入的木质小款前景卡片 */
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .entry-intake .timeline-icon-box {
-    background: #FFEDEA;
+    background: rgb(238, 194, 189);
 }
 
 .entry-exercise .timeline-icon-box {
-    background: #E8F3EE;
+    background: rgba(180, 230, 185, 0.5);
 }
 
 .meal-info {
@@ -628,20 +747,21 @@ onUnmounted(() => {
 
 .timeline-cal {
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 800;
+    font-family: monospace;
 }
 
 .entry-intake .timeline-cal {
-    color: var(--color-light-red);
+    color: #C0524D;
 }
 
 .entry-exercise .timeline-cal {
-    color: var(--color-light-green);
+    color: #4A8750;
 }
 
 .timeline-desc {
     font-size: 13px;
-    color: var(--text-secondary);
+    color: #8B6A70;
     margin: 0;
     line-height: 1.4;
 }
@@ -650,6 +770,53 @@ onUnmounted(() => {
     font-size: 14px;
     color: var(--text-primary);
     line-height: 1.5;
+}
+
+/* 本月汇总木牌按钮 - 浆果黄昏主题适配 */
+.wooden-summary-btn {
+    background: #B98B99;
+    /* 豆沙粉，与填充条正常色一致 */
+    color: #FCE6DA;
+    /* 暖粉白，与面板背景呼应 */
+    border-right: 3px solid #b17a95;
+    border-left: 3px solid #b17a95;
+    border-top: 2px solid transparent;
+    border-bottom: 2px solid #62425d;
+    /* 红棕边框，同容器边框 */
+    box-shadow: inset 0 -5px 0 #80587a, 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* 内阴影用灰紫 */
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    font-family: monospace;
+    cursor: pointer;
+    white-space: nowrap;
+    align-self: center;
+    transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
+}
+
+.wooden-summary-btn:hover {
+    /* 浅红棕，取自标题栏边框 */
+    transform: translateY(2px);
+    box-shadow: inset 0 -3px 0 #80587a, 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.wooden-summary-btn:active {
+    transform: translateY(4px);
+    box-shadow: inset 0 -1px 0 #80587a, 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 面板展开时保持按下样式 */
+.wooden-summary-btn.active {
+    transform: translateY(4px);
+    box-shadow: inset 0 -1px 0 #80587a, inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: #9A7285;
+}
+
+.wooden-summary-btn.active:hover {
+    transform: translateY(2px);
+    box-shadow: inset 0 -2px 0 #80587a, inset 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* 运动卡片有点不同 */
@@ -824,7 +991,7 @@ onUnmounted(() => {
 .picker-nav-btn {
     background: transparent;
     border: none;
-    color: var(--text-secondary);
+    color: #ffffffcc;
     font-size: 16px;
     cursor: pointer;
     width: 24px;
@@ -836,8 +1003,8 @@ onUnmounted(() => {
 }
 
 .picker-nav-btn:hover {
-    background: #FFEDEA;
-    color: var(--color-accent);
+    background: #FFEDEA1a;
+
 }
 
 .picker-weekdays {
@@ -881,7 +1048,8 @@ onUnmounted(() => {
 }
 
 .picker-cell.not-current-month {
-    color: #D1D5DB;
+    pointer-events: none;
+    /* 防止点击非当月空白格子 */
 }
 
 /* 当日/当月 标识圆点 */
@@ -936,5 +1104,177 @@ onUnmounted(() => {
 .picker-month-cell.selected {
     background: var(--color-accent);
     color: white;
+}
+
+/* ===== 本月汇总面板 (Drawer Layout) ===== */
+.month-summary-panel {
+    flex-shrink: 0;
+    width: 360px;
+    height: 420px;
+    /* 柨木聞：暗棕色底色 + 木纹背景 */
+    background-color: #F3E0D6;
+    background-image: linear-gradient(135deg, #F5D5C4 0%, #FCE6DA 50%, #F0CDBC 100%);
+    border-radius: 16px;
+    /* 木质帧与阴影 */
+    border: 3px solid #B1877A;
+    box-shadow: 0 6px 0 #8E6B61, 0 12px 16px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+
+.summary-month-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    /* 木牌标题栏 */
+    background: #B6867A;
+    border: 2px solid #8B6A70;
+    border-radius: 10px;
+    padding: 8px 12px;
+    box-shadow: inset 0 -3px 0 #8B6A70;
+}
+
+.summary-month-title {
+    font-weight: 800;
+    font-size: 15px;
+    font-family: monospace;
+    color: #FAD6C0;
+}
+
+.summary-month-title:hover {
+    /* 文字加阴影 */
+    cursor: pointer;
+    color: #59493b;
+    text-shadow: 0 0 1px #FAD6C0;
+}
+
+/* 与日期格共用相同的 grid-template-columns 和 gap，确保对齐 */
+.summary-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8B6A70;
+    margin-bottom: 6px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.summary-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    padding: 6px 2px;
+    min-height: 48px;
+}
+
+.summary-cell.not-current-month {
+    background: transparent;
+    pointer-events: none;
+    box-shadow: none;
+    opacity: 0;
+}
+
+.summary-cell:hover {
+    background: rgba(177, 135, 122, 0.2);
+    transform: scale(1.05);
+}
+
+.summary-cell.selected {
+    background: #B6867A;
+    color: #FAD6C0;
+    box-shadow: inset 0 -2px 0 #8B6A70;
+}
+
+.summary-day {
+    font-size: 14px;
+    font-weight: 700;
+    color: #5A3D44;
+    margin-bottom: 2px;
+}
+
+.summary-deficit {
+    font-size: 10px;
+    font-weight: 800;
+    font-family: monospace;
+}
+
+.deficit-positive {
+    color: #4A8750;
+}
+
+.deficit-negative {
+    color: #C0524D;
+}
+
+.summary-cell.selected .deficit-positive,
+.summary-cell.selected .deficit-negative,
+.summary-cell.selected .deficit-empty {
+    color: rgba(252, 230, 218, 0.9);
+}
+
+.deficit-empty {
+    color: #A8836E;
+}
+
+/* 未选中的今日：背景浅底色 + 文字加下划线 */
+.summary-cell.is-today:not(.selected) {
+    background: rgba(177, 135, 122, 0.2);
+}
+
+.summary-cell.is-today:not(.selected) .summary-day {
+    color: #B1877A;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* 选中的今日：深木色背景 + 白字 + 额外的高亮圆点 */
+.summary-cell.is-today.selected .summary-day {
+    color: #FAD6C0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+
+/* 动画 */
+.slide-right-enter-active,
+.slide-right-leave-active {
+    transition: all 0.3s cubic-bezier(0.82, 0.085, 0.395, 0.895);
+    overflow: hidden;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+    opacity: 0;
+    width: 0;
+    margin-left: -24px;
+    /* 抵消 gap */
+    padding-left: 0;
+    padding-right: 0;
+    transform: translateX(10px);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

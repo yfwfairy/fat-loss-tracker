@@ -149,8 +149,8 @@ const saveProfile = () => {
         weight: weight.value,
         activityLevel: activityLevel.value,
         bodyFat: bodyFat.value,
-        bmr: bmrValue.value || props.initialData.bmr,
-        bmi: bmiData.value?.value || props.initialData.bmi,
+        bmr: bmrValue.value,
+        bmi: bmiData.value?.value,
         measurements: measurementData
     });
     emit('close');
@@ -313,7 +313,7 @@ const callouts = computed(() =>
                                 <span class="bmi-title">体质指数 (BMI)</span>
                                 <span class="bmi-value" :style="{ color: bmiData?.color || '#ccc' }">{{ bmiData?.value
                                     || '--'
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div class="bmi-bar">
                                 <div class="bmi-segment underweight" style="flex: 3.5"></div>
